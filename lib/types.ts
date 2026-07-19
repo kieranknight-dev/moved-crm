@@ -1,0 +1,92 @@
+// Domain types for the REAL MOVED Supabase schema, confirmed against the live
+// database (supabase gen types → ./database.types.ts) and the iOS Swift models
+// (Models/Workout.swift, Models/ExerciseLibrary.swift) on 2026-07-16.
+//
+// All string enum values below are case-sensitive and MUST match the Swift
+// enum raw values exactly — the iOS app decodes them with no fallback.
+//
+// Schema facts that differ from the original scaffold guesses:
+//   - Exercises within a workout are a JSONB array on workouts.exercises;
+//     there is NO workout_exercises junction table.
+//   - The exercise picker dataset lives in the `exercises` table (874 rows,
+//     migrated from the iOS bundle on 2026-07-16): name + equipment category.
+//   - There are NO status / publish_at columns yet — scheduling lands in
+//     build-order step 5 and these types will grow then.
+
+import type { Database } from './database.types'
+
+// Raw table rows straight from the generated types.
+export type WorkoutRow = Database['public']['Tables']['workouts']['Row']
+export type WorkoutInsert = Database['public']['Tables']['workouts']['Insert']
+export type WorkoutUpdate = Database['public']['Tables']['workouts']['Update']
+export type ExerciseRow = Database['public']['Tables']['exercises']['Row']
+
+// Swift: WorkoutFormat
+export type WorkoutFormat =
+  | 'Rounds'
+  | 'AMRAP'
+  | 'EMOM'
+  | 'For Time'
+  | 'Tabata'
+  | 'Circuit'
+
+// Swift: WorkoutDifficulty
+export type WorkoutDifficulty = 'Beginner' | 'Intermediate' | 'Advanced'
+
+// Swift: WorkoutCategory
+export type WorkoutCategory =
+  | 'Strength'
+  | 'HIIT'
+  | 'Conditioning'
+  | 'Mobility'
+  | 'Full Body'
+
+// Swift: WorkoutSource. The CRM writes 'coach' rows (Georgia's content);
+// the other three are user-owned values the CRM must never write.
+export type WorkoutSource = 'coach' | 'aiGenerated' | 'saved' | 'userCreated'
+
+// Publishing lifecycle (added in the status/publish_at migration). The app
+// only shows coach workouts that are 'published' with publish_at <= now()
+// (enforced by RLS); 'archived' is a soft-delete for the library.
+export type WorkoutStatus = 'draft' | 'scheduled' | 'published' | 'archived'
+
+// Swift: ExerciseCategory — equipment-derived, enforced by a CHECK constraint
+// on exercises.category.
+export type ExerciseCategory =
+  | 'Bodyweight'
+  | 'Dumbbell'
+  | 'Barbell'
+  | 'Kettlebell'
+  | 'Machine'
+  | 'Other'
+
+// One element of the workouts.exercises JSONB array — mirrors the Swift
+// `Exercise` struct's CodingKeys exactly.
+export interface WorkoutExercise {
+  id: string // UUID
+  name: string
+  detail: string // display string: "12 reps", "45 sec", "10 reps each side"
+  sets?: number | null // Strength only; null falls back to workout.rounds
+  rest_after_sets_seconds?: number | null // Strength only; null falls back to 45
+  round_index?: number | null // Circuit/Tabata custom-rounds tag, 1-based; null = same-every-round
+}
+
+// workouts row with the string/JSONB columns narrowed to their domain types.
+export interface Workout
+  extends Omit<
+    WorkoutRow,
+    'format' | 'difficulty' | 'category' | 'source' | 'status' | 'exercises'
+  > {
+  format: WorkoutFormat
+  difficulty: WorkoutDifficulty
+  category: WorkoutCategory
+  source: WorkoutSource
+  status: WorkoutStatus
+  exercises: WorkoutExercise[]
+}
+
+// exercises row with category narrowed. Note: `name` is UNIQUE and is the
+// identity the iOS picker uses.
+export interface Exercise extends Omit<ExerciseRow, 'category'> {
+  category: ExerciseCategory
+}
