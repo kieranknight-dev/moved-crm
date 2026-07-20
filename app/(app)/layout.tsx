@@ -39,6 +39,12 @@ export default async function AppLayout({
           >
             New Workout
           </a>
+          <a
+            href="/recipes"
+            className="rounded-pill px-4 py-2 hover:bg-blush-50 transition-colors"
+          >
+            Recipes
+          </a>
         </nav>
 
         <div className="mt-auto pt-6 border-t border-blush-100">

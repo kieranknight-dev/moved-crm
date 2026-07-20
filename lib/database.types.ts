@@ -125,6 +125,51 @@ export type Database = {
         }
         Relationships: []
       }
+      recipes: {
+        Row: {
+          category: string
+          created_at: string | null
+          dietary_tags: string[]
+          difficulty: string
+          id: string
+          image_url: string | null
+          ingredients: Json
+          is_premium: boolean
+          name: string
+          prep_minutes: number
+          servings: number
+          steps: Json
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          dietary_tags?: string[]
+          difficulty?: string
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          is_premium?: boolean
+          name: string
+          prep_minutes: number
+          servings?: number
+          steps?: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          dietary_tags?: string[]
+          difficulty?: string
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          is_premium?: boolean
+          name?: string
+          prep_minutes?: number
+          servings?: number
+          steps?: Json
+        }
+        Relationships: []
+      }
       workout_history: {
         Row: {
           completed_at: string | null

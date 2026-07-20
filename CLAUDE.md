@@ -199,6 +199,30 @@ Deploy target: Vercel.
   month. Both return `429 {"error":"RATE_LIMIT_EXCEEDED"}` when exceeded.
   **iOS TODO**: confirm the app handles a 429 on *swap* (it already handles it
   for generate — swap may need the same paywall/toast handling added).
+- **Recipe Builder** (2026-07-18) — sibling feature to the Workout Builder,
+  same app/auth/conventions. `/recipes` (`app/(app)/recipes/`) = a single page
+  with the add-form on top and an existing-recipes list below (add + view only;
+  no edit/delete). Mirrors the builder exactly: server page reads via
+  `createAdminClient`, client `RecipeBuilder.tsx` (local Chip/Stepper helpers
+  copied from the builder's styling), `createRecipe` server action via
+  `requireAdminClient`. Nav entry "Recipes" in `app/(app)/layout.tsx`.
+  - Tables/policies: `recipes` (RLS: authenticated read, `is_crm_admin()`
+    write) + `recipe-images` public bucket (admin-only write via
+    `is_crm_admin()`). Migrations `20260719010000_recipes.sql` /
+    `20260719010001_recipe_images_bucket.sql`. `is_premium` is app-side only
+    (not RLS-enforced — "could harden later").
+  - **Image upload is the one new pattern**: client-side via the browser client
+    (`lib/supabase/client.ts`, previously unused) to `recipe-images`, then the
+    public URL is stored on the row. Needs a real admin session (RLS) — verified
+    via SQL simulation, not the auth-bypassed local run.
+  - **Migration-history note**: pushing hit a mismatch — the `gigi_usage`
+    backfill existed locally as `20260620000000_create_gigi_usage.sql` but the
+    remote had recorded it at `20260719004817`. Reconciled with
+    `supabase migration repair` (reverted the mis-versioned remote entry, marked
+    the repo's version applied) — metadata only, the table was untouched. If
+    another workflow re-introduces a stray version, that's the fix.
+  - iOS note: recipes RLS is authenticated-read (no anon) — the app already has
+    a session for every feature, so a Recipes tab is a non-issue there.
 
 ## Priority build order
 1. ~~Confirm real Supabase schema and migrate the bundled exercise dataset

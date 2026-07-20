@@ -18,6 +18,52 @@ import type { Database } from './database.types'
 // Raw table rows straight from the generated types.
 export type WorkoutRow = Database['public']['Tables']['workouts']['Row']
 export type WorkoutInsert = Database['public']['Tables']['workouts']['Insert']
+
+// --- Recipes (sibling to workouts; see supabase/migrations/*_recipes.sql) ---
+export type RecipeRow = Database['public']['Tables']['recipes']['Row']
+export type RecipeInsert = Database['public']['Tables']['recipes']['Insert']
+
+// Category is stored lowercase (matches the DB CHECK); the form shows
+// capitalized labels.
+export type RecipeCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+export const RECIPE_CATEGORIES: { value: RecipeCategory; label: string }[] = [
+  { value: 'breakfast', label: 'Breakfast' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'dinner', label: 'Dinner' },
+  { value: 'snack', label: 'Snack' },
+]
+
+export type RecipeDifficulty = 'Easy' | 'Medium' | 'Hard'
+export const RECIPE_DIFFICULTIES: RecipeDifficulty[] = ['Easy', 'Medium', 'Hard']
+
+// Fixed dietary-tag list (checkboxes, not freeform) so data stays consistent
+// and the iOS app can filter on it later. Extend by adding to this array.
+export const DIETARY_TAGS = [
+  'Dairy Free',
+  'Gluten Free',
+  'Nut Free',
+  'Vegetarian',
+  'Vegan',
+  'Meat',
+  'Fish',
+] as const
+export type DietaryTag = (typeof DIETARY_TAGS)[number]
+
+// What the Recipe Builder form collects. The server action maps this to a
+// RecipeInsert (ingredients/steps → JSONB string arrays). image_url is the
+// public URL returned after the client-side upload to recipe-images.
+export interface RecipeFormInput {
+  name: string
+  category: RecipeCategory
+  imageUrl: string | null
+  prepMinutes: number
+  difficulty: RecipeDifficulty
+  servings: number
+  dietaryTags: string[]
+  ingredients: string[]
+  steps: string[]
+  isPremium: boolean
+}
 export type WorkoutUpdate = Database['public']['Tables']['workouts']['Update']
 export type ExerciseRow = Database['public']['Tables']['exercises']['Row']
 
