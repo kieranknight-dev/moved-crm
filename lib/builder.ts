@@ -498,7 +498,7 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
   const isRoundsFmt = format === 'Circuit' || format === 'Tabata'
   const isCustomRounds = isRoundsFmt && raw.some((e) => typeof e?.round_index === 'number')
 
-  const exercises: BuilderExercise[] = raw.map((e) => {
+  const rawExercises: BuilderExercise[] = raw.map((e) => {
     const d = parseDetail(String(e?.detail ?? ''))
     return {
       // Always fresh: a repeated round (see buildInsert) reuses the same id
@@ -515,7 +515,40 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     }
   })
 
-  const maxRound = exercises.reduce((m, e) => Math.max(m, e.roundIndex ?? 0), 0)
+  // Storage has no separate repeat-count concept (see buildInsert) — a round
+  // that was saved as ×3 comes back as 3 consecutive physical round_index
+  // blocks with identical exercises. Detect and collapse those runs back into
+  // one authored round + repeatCount, so reopening a repeated round doesn't
+  // dump it out as N duplicate round cards.
+  let exercises = rawExercises
+  let customRoundCount = Math.max(1, rawExercises.reduce((m, e) => Math.max(m, e.roundIndex ?? 0), 0))
+  const roundRepeats: Record<number, number> = {}
+
+  if (isCustomRounds) {
+    const signature = (exs: BuilderExercise[]) =>
+      JSON.stringify(exs.map((e) => ({ name: e.name, isTimed: e.isTimed, reps: e.reps, seconds: e.seconds })))
+
+    const physicalRounds: BuilderExercise[][] = []
+    for (let r = 1; r <= customRoundCount; r++) {
+      physicalRounds.push(rawExercises.filter((e) => e.roundIndex === r))
+    }
+
+    const collapsed: { exercises: BuilderExercise[]; repeat: number }[] = []
+    for (const round of physicalRounds) {
+      const prev = collapsed[collapsed.length - 1]
+      if (prev && signature(prev.exercises) === signature(round)) prev.repeat += 1
+      else collapsed.push({ exercises: round, repeat: 1 })
+    }
+
+    const finalExercises: BuilderExercise[] = []
+    collapsed.forEach((c, i) => {
+      const roundNum = i + 1
+      roundRepeats[roundNum] = c.repeat
+      for (const e of c.exercises) finalExercises.push({ ...e, roundIndex: roundNum })
+    })
+    exercises = finalExercises
+    customRoundCount = collapsed.length
+  }
 
   return {
     workoutName: w.title ?? '',
@@ -523,11 +556,8 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     isCustomRounds,
     rounds: w.rounds ?? 3,
     restBetweenRoundsSeconds: w.rest_between_rounds_seconds ?? 0,
-    customRoundCount: Math.max(1, maxRound || 1),
-    // Repeats can't be recovered from the flattened storage (see buildInsert) —
-    // a previously-repeated round reopens as that many separate rounds, each
-    // ×1. Best-effort, same as the rest of this reverse conversion.
-    roundRepeats: {},
+    customRoundCount,
+    roundRepeats,
     amrapCapMinutes: format === 'AMRAP' ? (w.duration ?? 12) : 12,
     forTimeCapEnabled: format === 'For Time' && w.for_time_cap_seconds != null,
     forTimeCapMinutes:
