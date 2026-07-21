@@ -223,6 +223,45 @@ Deploy target: Vercel.
     another workflow re-introduces a stray version, that's the fix.
   - iOS note: recipes RLS is authenticated-read (no anon) — the app already has
     a session for every feature, so a Recipes tab is a non-issue there.
+- **Recipes admin: Builder + List, with scheduling** (2026-07-21). Recipes now
+  mirror the Workouts Builder/Library split exactly:
+  - `recipes` got `status`/`publish_at` (identical shape to workouts';
+    migrations `20260721125000_recipes_status_publishing.sql` — added the
+    CHECK constraint + index that didn't exist yet even though the columns
+    had already been added out-of-band — and
+    `20260721130000_recipes_publish_visibility.sql`, which tightened the
+    previously-`USING (true)` SELECT policy to
+    `status IN ('published','scheduled') AND publish_at <= now()`, written
+    correctly from the start to avoid the workouts scheduling bug below).
+  - `/recipes` is now the Builder (create **and** edit via `?id=`, admin
+    client fetch — same reason as `/builder`: drafts aren't RLS-visible even
+    to admins). `/recipe-library` is the new List tab (filters: status,
+    category, name search; row actions: Edit, Archive/Restore, and a genuine
+    hard **Delete** — safe because, unlike workouts, no table references
+    `recipes.id`, confirmed via FK search before deciding not to make this
+    archive-only).
+  - `resolvePublish` / `isoToLocalInput` / `publishInitFromStatus` from
+    `lib/builder.ts` are reused as-is for recipes (they're generic over
+    status/publish_at strings, not workout-specific) rather than
+    duplicated. The Draft/Schedule/Publish selector itself was extracted
+    from `BuilderClient.tsx` into `components/PublishPanel.tsx` (a genuine
+    second consumer justified pulling it out) and both builders now import
+    the same component.
+  - Nav: sidebar now has "Recipes" (→ `/recipe-library`) and "New Recipe"
+    (→ `/recipes`), mirroring "Workouts"/"New Workout".
+- **Fixed: scheduled workouts never went live** (2026-07-21). Bug: the coach
+  SELECT RLS policy only allowed `status='published'`, but `resolvePublish()`
+  (`lib/builder.ts`) sets `status='scheduled'` (not `'published'`) for a future
+  publish date — and nothing ever flips it, by the deliberate no-cron design
+  (see "Notes on scheduling" below). So a scheduled workout stayed invisible
+  forever, even after its `publish_at` passed. Fix (migration
+  `supabase/migrations/20260721120000_scheduled_workout_visibility.sql`):
+  extended the SELECT policy to `status IN ('published', 'scheduled') AND
+  publish_at <= now()`, keeping the no-cron query-side-filtering design.
+  `lib/database.types.ts` unchanged (policy-only change, no schema shape
+  change). Verified via rolled-back role simulation: a normal authenticated
+  user now sees a due `scheduled` row and the existing due `published` row,
+  while a future `scheduled` row and a `draft` row stay hidden.
 
 ## Priority build order
 1. ~~Confirm real Supabase schema and migrate the bundled exercise dataset

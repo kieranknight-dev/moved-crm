@@ -3,6 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import type { PublishMode } from '@/lib/builder'
+import { PublishPanel } from '@/components/PublishPanel'
 import {
   RECIPE_CATEGORIES,
   RECIPE_DIFFICULTIES,
@@ -11,13 +13,13 @@ import {
   type RecipeDifficulty,
   type RecipeFormInput,
 } from '@/lib/types'
-import { createRecipe } from './actions'
+import { createRecipe, updateRecipe } from './actions'
 
-export interface RecipeListItem {
-  id: string
-  name: string
-  category: string
-  image_url: string | null
+export interface RecipeBuilderInit {
+  recipeId: string
+  form: RecipeFormInput
+  publishMode: PublishMode
+  scheduledLocal: string
 }
 
 const EMPTY: RecipeFormInput = {
@@ -33,13 +35,15 @@ const EMPTY: RecipeFormInput = {
   isPremium: true,
 }
 
-export default function RecipeBuilder({ recipes }: { recipes: RecipeListItem[] }) {
+export default function RecipeBuilder({ init }: { init?: RecipeBuilderInit }) {
   const router = useRouter()
+  const isEditing = init != null
   const [supabase] = useState(() => createClient())
-  const [form, setForm] = useState<RecipeFormInput>(EMPTY)
+  const [form, setForm] = useState<RecipeFormInput>(init?.form ?? EMPTY)
+  const [publishMode, setPublishMode] = useState<PublishMode>(init?.publishMode ?? 'publish')
+  const [scheduledLocal, setScheduledLocal] = useState(init?.scheduledLocal ?? '')
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
   const [saving, startSaving] = useTransition()
 
   const set = <K extends keyof RecipeFormInput>(key: K, value: RecipeFormInput[K]) =>
@@ -87,30 +91,39 @@ export default function RecipeBuilder({ recipes }: { recipes: RecipeListItem[] }
 
   const onSave = () => {
     setError(null)
-    setSaved(false)
+    const scheduledIso =
+      publishMode === 'schedule' && scheduledLocal ? new Date(scheduledLocal).toISOString() : null
     startSaving(async () => {
-      const result = await createRecipe(form)
+      const result = isEditing
+        ? await updateRecipe(init.recipeId, form, publishMode, scheduledIso)
+        : await createRecipe(form, publishMode, scheduledIso)
       if (!result.ok) setError(result.error)
       else {
-        setForm(EMPTY)
-        setSaved(true)
+        router.push('/recipe-library')
         router.refresh()
       }
     })
   }
 
+  const saveLabel = saving
+    ? 'Saving…'
+    : publishMode === 'draft'
+      ? 'Save as draft'
+      : publishMode === 'schedule'
+        ? 'Schedule recipe'
+        : 'Publish now'
+
   return (
-    <div className="max-w-2xl">
-      <h1 className="font-display text-2xl text-ink-900 mb-6">New recipe</h1>
+    <div className="max-w-2xl pb-24">
+      <h1 className="font-display text-2xl text-ink-900 mb-6">
+        {isEditing ? 'Edit recipe' : 'New recipe'}
+      </h1>
 
       {/* Name */}
       <input
         type="text"
         value={form.name}
-        onChange={(e) => {
-          set('name', e.target.value)
-          setSaved(false)
-        }}
+        onChange={(e) => set('name', e.target.value)}
         placeholder="Recipe name"
         className="w-full font-display text-2xl text-ink-900 placeholder:text-ink-300 border-b-2 border-blush-100 pb-2 mb-6 outline-none focus:border-blush-500 transition-colors"
       />
@@ -224,74 +237,32 @@ export default function RecipeBuilder({ recipes }: { recipes: RecipeListItem[] }
       />
 
       {/* Premium */}
-      <label className="flex items-center gap-3 text-sm text-ink-900 mb-8">
+      <label className="flex items-center gap-3 text-sm text-ink-900 mb-2">
         <Toggle checked={form.isPremium} onChange={(v) => set('isPremium', v)} />
         Available to Pro subscribers only
       </label>
 
+      {/* Publish */}
+      <PublishPanel
+        mode={publishMode}
+        setMode={setPublishMode}
+        scheduledLocal={scheduledLocal}
+        setScheduledLocal={setScheduledLocal}
+      />
+
       {error && (
-        <p className="mb-4 text-sm text-blush-700 bg-blush-50 border border-blush-100 rounded-card px-4 py-3">
+        <p className="mt-6 text-sm text-blush-700 bg-blush-50 border border-blush-100 rounded-card px-4 py-3">
           {error}
-        </p>
-      )}
-      {saved && (
-        <p className="mb-4 text-sm text-blush-700 bg-blush-50 border border-blush-100 rounded-card px-4 py-3">
-          Recipe saved.
         </p>
       )}
 
       <button
         onClick={onSave}
         disabled={saving || uploading}
-        className="w-full rounded-pill bg-blush-500 text-white py-3.5 text-sm font-medium shadow-cta hover:shadow-cardHover transition-shadow disabled:opacity-50"
+        className="mt-6 w-full rounded-pill bg-blush-500 text-white py-3.5 text-sm font-medium shadow-cta hover:shadow-cardHover transition-shadow disabled:opacity-50"
       >
-        {saving ? 'Saving…' : 'Save recipe'}
+        {saveLabel}
       </button>
-
-      {/* Existing recipes */}
-      <div className="mt-12">
-        <h2 className="font-display text-base text-ink-900 mb-4">
-          Recipes <span className="text-ink-300 tabular-nums">({recipes.length})</span>
-        </h2>
-        <div className="rounded-card border border-blush-100 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-blush-50 text-ink-500 text-left">
-              <tr>
-                <th className="px-5 py-3 font-medium w-16"></th>
-                <th className="px-5 py-3 font-medium">Name</th>
-                <th className="px-5 py-3 font-medium">Category</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recipes.map((r) => (
-                <tr key={r.id} className="border-t border-blush-100">
-                  <td className="px-5 py-3">
-                    {r.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={r.image_url}
-                        alt=""
-                        className="h-10 w-10 rounded-card object-cover"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-card bg-blush-50" />
-                    )}
-                  </td>
-                  <td className="px-5 py-3 text-ink-900">{r.name}</td>
-                  <td className="px-5 py-3 capitalize text-ink-500">{r.category}</td>
-                </tr>
-              ))}
-              {recipes.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="px-5 py-8 text-center text-ink-500">
-                    No recipes yet. Create your first one above.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   )
 }

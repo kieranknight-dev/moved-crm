@@ -22,14 +22,20 @@ export type WorkoutInsert = Database['public']['Tables']['workouts']['Insert']
 // --- Recipes (sibling to workouts; see supabase/migrations/*_recipes.sql) ---
 export type RecipeRow = Database['public']['Tables']['recipes']['Row']
 export type RecipeInsert = Database['public']['Tables']['recipes']['Insert']
+export type RecipeUpdate = Database['public']['Tables']['recipes']['Update']
+
+// Publishing lifecycle — identical shape to WorkoutStatus (see
+// supabase/migrations/20260721125000_recipes_status_publishing.sql). The app
+// only shows recipes that are 'published' or a due 'scheduled' row (enforced
+// by RLS); 'archived' is a soft-delete for the library.
+export type RecipeStatus = 'draft' | 'scheduled' | 'published' | 'archived'
 
 // Category is stored lowercase (matches the DB CHECK); the form shows
 // capitalized labels.
-export type RecipeCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+export type RecipeCategory = 'breakfast' | 'lunch_dinner' | 'snack'
 export const RECIPE_CATEGORIES: { value: RecipeCategory; label: string }[] = [
   { value: 'breakfast', label: 'Breakfast' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'dinner', label: 'Dinner' },
+  { value: 'lunch_dinner', label: 'Lunch / Dinner' },
   { value: 'snack', label: 'Snack' },
 ]
 
@@ -86,6 +92,8 @@ export type WorkoutCategory =
   | 'Conditioning'
   | 'Mobility'
   | 'Full Body'
+  | 'Upper Body'
+  | 'Lower Body'
 
 // Swift: WorkoutSource. The CRM writes 'coach' rows (Georgia's content);
 // the other three are user-owned values the CRM must never write.

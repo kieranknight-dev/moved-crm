@@ -25,6 +25,8 @@ export const CATEGORY_ACCENTS: Record<WorkoutCategory, string> = {
   Conditioning: '#7A92A5',
   Mobility: '#7E9770',
   'Full Body': '#8D7BA6',
+  'Upper Body': '#B76578',
+  'Lower Body': '#6FA39B',
 }
 
 export const SOURCE_LABELS: Record<WorkoutSource, string> = {

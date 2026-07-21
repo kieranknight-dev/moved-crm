@@ -59,6 +59,12 @@ export interface BuilderState {
   rounds: number
   restBetweenRoundsSeconds: number
   customRoundCount: number
+  // Authoring-time only, keyed by round number (1-based); missing = 1. Matches
+  // iOS's GigiRound.repeatCount convention (Models/GigiModels.swift) — a round
+  // repeated N times is expanded into N consecutive physical round_index blocks
+  // at save time (see buildInsert), since the flat exercises[] model has no
+  // separate repeat-count concept of its own.
+  roundRepeats: Record<number, number>
 
   // AMRAP / For Time
   amrapCapMinutes: number
@@ -76,7 +82,6 @@ export interface BuilderState {
   description: string
   equipment: string
   isNew: boolean
-  postedAgo: string
 }
 
 // ---------------------------------------------------------------------------
@@ -121,6 +126,8 @@ export const CATEGORIES: WorkoutCategory[] = [
   'Conditioning',
   'Mobility',
   'Full Body',
+  'Upper Body',
+  'Lower Body',
 ]
 
 export const DIFFICULTIES: WorkoutDifficulty[] = [
@@ -154,6 +161,7 @@ export function initialBuilderState(): BuilderState {
     rounds: 3,
     restBetweenRoundsSeconds: 0,
     customRoundCount: 1,
+    roundRepeats: {},
     amrapCapMinutes: 12,
     forTimeCapEnabled: false,
     forTimeCapMinutes: 15,
@@ -164,8 +172,22 @@ export function initialBuilderState(): BuilderState {
     description: '',
     equipment: '',
     isNew: true,
-    postedAgo: '',
   }
+}
+
+// Repeat count for an authored round (1-based); missing = 1, matching iOS's
+// GigiRound decode fallback.
+export function repeatCountFor(state: BuilderState, round: number): number {
+  return Math.max(1, state.roundRepeats[round] ?? 1)
+}
+
+// Total physical round count once repeats are expanded — mirrors iOS's
+// GigiWorkout.asWorkout() physicalRoundCount accumulation.
+function physicalRoundCount(state: BuilderState): number {
+  const authored = Math.max(1, maxRoundIndex(state.exercises))
+  let total = 0
+  for (let r = 1; r <= authored; r++) total += repeatCountFor(state, r)
+  return total
 }
 
 // ---------------------------------------------------------------------------
@@ -188,7 +210,7 @@ function maxRoundIndex(exercises: BuilderExercise[]): number {
 
 export function roundCountFor(state: BuilderState): number {
   if (state.format !== 'Circuit' && state.format !== 'Tabata') return 1
-  return state.isCustomRounds ? Math.max(1, maxRoundIndex(state.exercises)) : state.rounds
+  return state.isCustomRounds ? physicalRoundCount(state) : state.rounds
 }
 
 export function quantityPillText(state: BuilderState, ex: BuilderExercise): string {
@@ -229,10 +251,19 @@ export function estimatedDuration(state: BuilderState): number {
     case 'EMOM':
       return state.emomMinutes
     case 'Tabata': {
-      const roundCount = state.isCustomRounds ? Math.max(1, maxRoundIndex(exercises)) : state.rounds
-      const perRound = state.isCustomRounds
-        ? Math.floor(exercises.length / Math.max(1, roundCount))
-        : exercises.length
+      if (state.isCustomRounds) {
+        const authored = Math.max(1, maxRoundIndex(exercises))
+        let stationSeconds = 0
+        for (let r = 1; r <= authored; r++) {
+          const perRound = exercises.filter((ex) => ex.roundIndex === r).length
+          if (perRound > 0) stationSeconds += (perRound * 30 - 10) * repeatCountFor(state, r)
+        }
+        const physical = physicalRoundCount(state)
+        const total = stationSeconds + Math.max(0, physical - 1) * state.restBetweenRoundsSeconds
+        return Math.max(1, Math.floor(total / 60))
+      }
+      const roundCount = state.rounds
+      const perRound = exercises.length
       if (perRound <= 0) return 1
       const perRoundSeconds = perRound * 30 - 10
       const total =
@@ -241,21 +272,24 @@ export function estimatedDuration(state: BuilderState): number {
     }
     case 'Circuit': {
       if (exercises.length === 0) return 1
-      const roundCount = state.isCustomRounds ? Math.max(1, maxRoundIndex(exercises)) : state.rounds
       if (state.isCustomRounds) {
+        const authored = Math.max(1, maxRoundIndex(exercises))
         let stationSeconds = 0
-        for (let r = 1; r <= roundCount; r++) {
-          stationSeconds += exercises
+        for (let r = 1; r <= authored; r++) {
+          const roundSeconds = exercises
             .filter((ex) => ex.roundIndex === r)
             .reduce((s, ex) => s + workSeconds(ex), 0)
+          stationSeconds += roundSeconds * repeatCountFor(state, r)
         }
+        const physical = physicalRoundCount(state)
         return Math.max(
           1,
           Math.floor(
-            (stationSeconds + Math.max(0, roundCount - 1) * state.restBetweenRoundsSeconds) / 60
+            (stationSeconds + Math.max(0, physical - 1) * state.restBetweenRoundsSeconds) / 60
           )
         )
       }
+      const roundCount = state.rounds
       const perRoundSeconds = exercises.reduce((s, ex) => s + workSeconds(ex), 0)
       const total =
         roundCount * perRoundSeconds + Math.max(0, roundCount - 1) * state.restBetweenRoundsSeconds
@@ -331,7 +365,7 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
 
   const valid = state.exercises.filter((ex) => ex.name.trim().length > 0)
 
-  const exercises: WorkoutExercisePayload[] = valid.map((ex) => {
+  const toPayload = (ex: BuilderExercise, roundIndex: number | null | undefined): WorkoutExercisePayload => {
     const payload: WorkoutExercisePayload = {
       id: ex.id,
       name: ex.name.trim(),
@@ -341,11 +375,32 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
       payload.sets = ex.sets
       payload.rest_after_sets_seconds = ex.restSeconds
     }
-    if (isCustomRoundsFormat && ex.roundIndex != null) {
-      payload.round_index = ex.roundIndex
+    if (isCustomRoundsFormat && roundIndex != null) {
+      payload.round_index = roundIndex
     }
     return payload
-  })
+  }
+
+  // Expand each authored round's repeatCount into that many consecutive
+  // physical round_index blocks — the flat exercises[] model has no separate
+  // repeat-count concept, exactly like iOS's GigiWorkout.asWorkout() (same id
+  // reused across repeated instances, matching that convention).
+  let exercises: WorkoutExercisePayload[]
+  if (isCustomRoundsFormat) {
+    const authored = Math.max(1, maxRoundIndex(valid))
+    exercises = []
+    let physical = 0
+    for (let r = 1; r <= authored; r++) {
+      const roundExercises = valid.filter((ex) => ex.roundIndex === r)
+      const repeat = repeatCountFor(state, r)
+      for (let i = 0; i < repeat; i++) {
+        physical += 1
+        for (const ex of roundExercises) exercises.push(toPayload(ex, physical))
+      }
+    }
+  } else {
+    exercises = valid.map((ex) => toPayload(ex, ex.roundIndex))
+  }
 
   const title = state.workoutName.trim() || `${FORMAT_CHIP_LABEL[state.format]} Workout`
   const rounds = roundCountFor(state)
@@ -361,7 +416,7 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
     is_new: state.isNew,
     is_favorited: false,
     is_shared: false,
-    posted_ago: state.postedAgo.trim() || null,
+    posted_ago: postedAgoFor(publish),
     description: state.description.trim(),
     equipment: state.equipment.trim(),
     format: state.format,
@@ -380,6 +435,28 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
   }
 
   return insert
+}
+
+// Replaces the old manual "posted" text input: the label reflects the actual
+// moment the workout goes live to the community feed (publish_at), not a
+// typed-in guess. Drafts/scheduled workouts aren't live yet, so there's
+// nothing to post — nil hides the "posted" row in the app (same as today).
+// Matches the existing app convention of a short relative string ("1d ago"),
+// e.g. from Models/Workout.swift's sample data.
+function postedAgoFor(publish: PublishIntent): string | null {
+  if (publish.status !== 'published' || !publish.publishAt) return null
+  return formatPostedAgo(publish.publishAt)
+}
+
+export function formatPostedAgo(publishAtIso: string): string {
+  const ms = Date.now() - new Date(publishAtIso).getTime()
+  const minutes = Math.floor(ms / 60000)
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
 
 // ---------------------------------------------------------------------------
@@ -413,7 +490,6 @@ type WorkoutForEdit = Pick<
   | 'description'
   | 'equipment'
   | 'is_new'
-  | 'posted_ago'
 >
 
 export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
@@ -425,7 +501,10 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
   const exercises: BuilderExercise[] = raw.map((e) => {
     const d = parseDetail(String(e?.detail ?? ''))
     return {
-      id: typeof e?.id === 'string' ? e.id : crypto.randomUUID(),
+      // Always fresh: a repeated round (see buildInsert) reuses the same id
+      // across its physical round_index copies, which would otherwise produce
+      // duplicate React keys once reopened in the builder.
+      id: crypto.randomUUID(),
       name: String(e?.name ?? ''),
       isTimed: format === 'Tabata' ? true : d.isTimed,
       reps: d.reps,
@@ -445,6 +524,10 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     rounds: w.rounds ?? 3,
     restBetweenRoundsSeconds: w.rest_between_rounds_seconds ?? 0,
     customRoundCount: Math.max(1, maxRound || 1),
+    // Repeats can't be recovered from the flattened storage (see buildInsert) —
+    // a previously-repeated round reopens as that many separate rounds, each
+    // ×1. Best-effort, same as the rest of this reverse conversion.
+    roundRepeats: {},
     amrapCapMinutes: format === 'AMRAP' ? (w.duration ?? 12) : 12,
     forTimeCapEnabled: format === 'For Time' && w.for_time_cap_seconds != null,
     forTimeCapMinutes:
@@ -456,7 +539,6 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     description: w.description ?? '',
     equipment: w.equipment ?? '',
     isNew: !!w.is_new,
-    postedAgo: w.posted_ago ?? '',
   }
 }
 

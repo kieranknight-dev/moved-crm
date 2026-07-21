@@ -137,7 +137,9 @@ export type Database = {
           is_premium: boolean
           name: string
           prep_minutes: number
+          publish_at: string | null
           servings: number
+          status: string
           steps: Json
         }
         Insert: {
@@ -151,7 +153,9 @@ export type Database = {
           is_premium?: boolean
           name: string
           prep_minutes: number
+          publish_at?: string | null
           servings?: number
+          status?: string
           steps?: Json
         }
         Update: {
@@ -165,7 +169,9 @@ export type Database = {
           is_premium?: boolean
           name?: string
           prep_minutes?: number
+          publish_at?: string | null
           servings?: number
+          status?: string
           steps?: Json
         }
         Relationships: []

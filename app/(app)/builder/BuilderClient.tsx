@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   initialBuilderState,
@@ -17,12 +17,45 @@ import {
   liveSummaryText,
   estimatedDuration,
   formatRowDuration,
+  repeatCountFor,
   type BuilderState,
   type BuilderExercise,
   type PublishMode,
 } from '@/lib/builder'
+import type { ExerciseCategory } from '@/lib/types'
 import { createCoachWorkout, updateCoachWorkout } from './actions'
 import { ExercisePicker, type PickerExercise } from './ExercisePicker'
+import { PublishPanel } from '@/components/PublishPanel'
+
+// Meaningful-first order for the auto-detected equipment summary — bodyweight
+// and "other" are dropped unless they're the only thing present (see
+// autoEquipmentFor below).
+const EQUIPMENT_ORDER: ExerciseCategory[] = [
+  'Dumbbell',
+  'Barbell',
+  'Kettlebell',
+  'Machine',
+  'Bodyweight',
+  'Other',
+]
+
+// Task 3: deterministic equipment auto-detect from the exercise catalog's
+// structured category metadata — the union of tags across every exercise in
+// the workout, no AI call needed. Exercises not found in the catalog (custom
+// free-text names) are silently skipped; the field stays user-editable so a
+// gap here is never a dead end.
+function autoEquipmentFor(names: string[], catalog: PickerExercise[]): string {
+  const byName = new Map(catalog.map((e) => [e.name.toLowerCase(), e.category]))
+  const found = new Set<ExerciseCategory>()
+  for (const name of names) {
+    const cat = byName.get(name.trim().toLowerCase())
+    if (cat) found.add(cat)
+  }
+  const meaningful = EQUIPMENT_ORDER.filter((c) => c !== 'Bodyweight' && c !== 'Other' && found.has(c))
+  if (meaningful.length > 0) return meaningful.join(', ')
+  if (found.has('Bodyweight')) return 'Bodyweight'
+  return ''
+}
 
 export interface BuilderInit {
   workoutId: string
@@ -46,6 +79,22 @@ export default function BuilderClient({
   const [publishMode, setPublishMode] = useState<PublishMode>(init?.publishMode ?? 'publish')
   const [scheduledLocal, setScheduledLocal] = useState(init?.scheduledLocal ?? '') // datetime-local value
   const isEditing = init != null
+
+  // Auto-detected equipment (Task 3): stays live while the admin hasn't typed
+  // into the field themselves. A loaded edit already has a saved value, so it
+  // starts "touched" — adding exercises won't clobber Georgia's existing text.
+  const [equipmentTouched, setEquipmentTouched] = useState(
+    isEditing && init!.state.equipment.trim().length > 0
+  )
+  useEffect(() => {
+    if (equipmentTouched) return
+    const auto = autoEquipmentFor(
+      state.exercises.map((e) => e.name),
+      exercises
+    )
+    if (auto !== state.equipment) setState((s) => ({ ...s, equipment: auto }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.exercises, equipmentTouched])
 
   // Picker: editingId set = renaming that exercise; else adding into targetRound.
   const [picker, setPicker] = useState<{ open: boolean; targetRound: number | null; editingId: string | null }>({
@@ -119,14 +168,11 @@ export default function BuilderClient({
 
   const addRound = () => set('customRoundCount', state.customRoundCount + 1)
 
-  const duplicateRound = (round: number) =>
-    setState((s) => {
-      const next = s.customRoundCount + 1
-      const copies = s.exercises
-        .filter((e) => e.roundIndex === round)
-        .map((e) => ({ ...e, id: crypto.randomUUID(), roundIndex: next }))
-      return { ...s, exercises: [...s.exercises, ...copies], customRoundCount: next }
-    })
+  const setRoundRepeat = (round: number, count: number) =>
+    setState((s) => ({
+      ...s,
+      roundRepeats: { ...s.roundRepeats, [round]: Math.max(1, count) },
+    }))
 
   // --- picker plumbing ---
   const openPickerToAdd = (round: number | null) =>
@@ -211,7 +257,7 @@ export default function BuilderClient({
             removeExercise={removeExercise}
             openPickerToAdd={openPickerToAdd}
             openPickerToRename={openPickerToRename}
-            duplicateRound={duplicateRound}
+            setRoundRepeat={setRoundRepeat}
             addRound={addRound}
           />
         ) : (
@@ -228,7 +274,7 @@ export default function BuilderClient({
       </div>
 
       {/* Coach details */}
-      <CoachDetails state={state} set={set} />
+      <CoachDetails state={state} set={set} onEquipmentEdited={() => setEquipmentTouched(true)} />
 
       {/* Publish */}
       <PublishPanel
@@ -405,7 +451,7 @@ function UniformSection(props: ExerciseSectionProps) {
 
 function CustomRoundsSection(
   props: ExerciseSectionProps & {
-    duplicateRound: (round: number) => void
+    setRoundRepeat: (round: number, count: number) => void
     addRound: () => void
   }
 ) {
@@ -419,12 +465,10 @@ function CustomRoundsSection(
             <span className="text-[11px] font-medium uppercase tracking-wider text-blush-600">
               Round {round}
             </span>
-            <button
-              onClick={() => props.duplicateRound(round)}
-              className="text-xs text-ink-300 hover:text-blush-600 transition-colors"
-            >
-              Duplicate round
-            </button>
+            <RoundRepeatStepper
+              count={repeatCountFor(state, round)}
+              onChange={(v) => props.setRoundRepeat(round, v)}
+            />
           </div>
           <div className="space-y-2">
             {state.exercises
@@ -591,9 +635,11 @@ function ExerciseEditCard({
 function CoachDetails({
   state,
   set,
+  onEquipmentEdited,
 }: {
   state: BuilderState
   set: <K extends keyof BuilderState>(key: K, value: BuilderState[K]) => void
+  onEquipmentEdited: () => void
 }) {
   return (
     <div className="mt-8 pt-6 border-t border-blush-100 space-y-5">
@@ -621,27 +667,18 @@ function CoachDetails({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <SubLabel>Equipment</SubLabel>
-          <input
-            type="text"
-            value={state.equipment}
-            onChange={(e) => set('equipment', e.target.value)}
-            placeholder="e.g. Dumbbells, Mat"
-            className="w-full rounded-card border border-blush-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-blush-500 transition-colors"
-          />
-        </div>
-        <div>
-          <SubLabel>“Posted” label (optional)</SubLabel>
-          <input
-            type="text"
-            value={state.postedAgo}
-            onChange={(e) => set('postedAgo', e.target.value)}
-            placeholder="e.g. 1d ago"
-            className="w-full rounded-card border border-blush-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-blush-500 transition-colors"
-          />
-        </div>
+      <div>
+        <SubLabel>Equipment (auto-detected from exercises — edit if needed)</SubLabel>
+        <input
+          type="text"
+          value={state.equipment}
+          onChange={(e) => {
+            onEquipmentEdited()
+            set('equipment', e.target.value)
+          }}
+          placeholder="e.g. Dumbbells, Mat"
+          className="w-full rounded-card border border-blush-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-blush-500 transition-colors"
+        />
       </div>
 
       <div>
@@ -659,62 +696,6 @@ function CoachDetails({
         <Toggle checked={state.isNew} onChange={(v) => set('isNew', v)} />
         Mark as “New” in the app
       </label>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Publish
-// ---------------------------------------------------------------------------
-
-const PUBLISH_OPTIONS: { mode: PublishMode; label: string; hint: string }[] = [
-  { mode: 'publish', label: 'Publish now', hint: 'Goes live in the app immediately.' },
-  { mode: 'schedule', label: 'Schedule', hint: 'Goes live automatically at a set time.' },
-  { mode: 'draft', label: 'Draft', hint: 'Saved to the library, hidden from the app.' },
-]
-
-function PublishPanel({
-  mode,
-  setMode,
-  scheduledLocal,
-  setScheduledLocal,
-}: {
-  mode: PublishMode
-  setMode: (m: PublishMode) => void
-  scheduledLocal: string
-  setScheduledLocal: (v: string) => void
-}) {
-  const active = PUBLISH_OPTIONS.find((o) => o.mode === mode)!
-  // Minimum selectable time: one minute from now, in local datetime-local format.
-  const min = new Date(Date.now() + 60_000).toISOString().slice(0, 16)
-  return (
-    <div className="mt-8 pt-6 border-t border-blush-100">
-      <Label>Publish</Label>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {PUBLISH_OPTIONS.map((o) => (
-          <button
-            key={o.mode}
-            onClick={() => setMode(o.mode)}
-            className={`rounded-card border px-3 py-2.5 text-sm font-medium transition-colors ${
-              mode === o.mode
-                ? 'border-blush-500 bg-blush-50 text-blush-700'
-                : 'border-blush-100 text-ink-500 hover:border-blush-200'
-            }`}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-      <p className="mt-2 text-xs text-ink-500">{active.hint}</p>
-      {mode === 'schedule' && (
-        <input
-          type="datetime-local"
-          value={scheduledLocal}
-          min={min}
-          onChange={(e) => setScheduledLocal(e.target.value)}
-          className="mt-3 rounded-card border border-blush-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-blush-500 transition-colors"
-        />
-      )}
     </div>
   )
 }
@@ -917,6 +898,39 @@ function SmallStepper({
         </span>
         <CircleButton onClick={() => onChange(Math.min(max, value + step))}>+</CircleButton>
       </div>
+    </div>
+  )
+}
+
+// Round-level repeat control (Task 1): "× N", increment/decrement on tap.
+// Min 1 — dropping to 1 just means the round plays once, same as omitting a
+// repeat entirely.
+function RoundRepeatStepper({
+  count,
+  onChange,
+}: {
+  count: number
+  onChange: (v: number) => void
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={() => onChange(Math.max(1, count - 1))}
+        aria-label="Repeat round fewer times"
+        className="h-5 w-5 grid place-items-center rounded-pill bg-white shadow-card text-ink-900 text-xs"
+      >
+        −
+      </button>
+      <span className="text-[11px] font-medium text-ink-500 tabular-nums w-6 text-center">
+        × {count}
+      </span>
+      <button
+        onClick={() => onChange(count + 1)}
+        aria-label="Repeat round more times"
+        className="h-5 w-5 grid place-items-center rounded-pill bg-white shadow-card text-ink-900 text-xs"
+      >
+        +
+      </button>
     </div>
   )
 }

@@ -1,28 +1,50 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import RecipeBuilder, { type RecipeListItem } from './RecipeBuilder'
+import { publishInitFromStatus } from '@/lib/builder'
+import RecipeBuilder, { type RecipeBuilderInit } from './RecipeBuilder'
 
-// Admin-only page: form to add a recipe + a list of existing ones. Reads via
-// the service-role admin client (same as /library) — the CRM is already gated
-// to admins by middleware. Dynamic so the list is fresh after each add.
+// Admin-only page: the Recipe Builder form (create, or edit with ?id=). Reads
+// via the service-role admin client (same as /builder) since a draft/scheduled
+// recipe isn't RLS-visible even to admins. Existing recipes are listed and
+// managed on /recipe-library. Dynamic so an edit always loads fresh data.
 export const dynamic = 'force-dynamic'
 
-export default async function RecipesPage() {
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('recipes')
-    .select('id, name, category, image_url')
-    .order('created_at', { ascending: false })
+export default async function RecipesPage({
+  searchParams,
+}: {
+  searchParams: { id?: string }
+}) {
+  let init: RecipeBuilderInit | undefined
 
-  if (error) {
-    return (
-      <div>
-        <h1 className="font-display text-2xl text-ink-900 mb-2">New recipe</h1>
-        <p className="rounded-card bg-blush-50 border border-blush-100 px-4 py-3 text-sm text-blush-700">
-          Couldn’t load recipes ({error.message}).
-        </p>
-      </div>
-    )
+  if (searchParams.id) {
+    const admin = createAdminClient()
+    const { data: recipe } = await admin
+      .from('recipes')
+      .select('*')
+      .eq('id', searchParams.id)
+      .single()
+    if (recipe) {
+      const publish = publishInitFromStatus(recipe.status, recipe.publish_at)
+      init = {
+        recipeId: recipe.id,
+        form: {
+          name: recipe.name,
+          category: recipe.category as RecipeBuilderInit['form']['category'],
+          imageUrl: recipe.image_url,
+          prepMinutes: recipe.prep_minutes,
+          difficulty: recipe.difficulty as RecipeBuilderInit['form']['difficulty'],
+          servings: recipe.servings,
+          dietaryTags: recipe.dietary_tags ?? [],
+          ingredients: (recipe.ingredients as string[] | null)?.length
+            ? (recipe.ingredients as string[])
+            : [''],
+          steps: (recipe.steps as string[] | null)?.length ? (recipe.steps as string[]) : [''],
+          isPremium: recipe.is_premium,
+        },
+        publishMode: publish.mode,
+        scheduledLocal: publish.scheduledLocal,
+      }
+    }
   }
 
-  return <RecipeBuilder recipes={(data ?? []) as RecipeListItem[]} />
+  return <RecipeBuilder init={init} />
 }
