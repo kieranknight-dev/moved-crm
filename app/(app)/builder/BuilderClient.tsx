@@ -18,11 +18,14 @@ import {
   estimatedDuration,
   formatRowDuration,
   repeatCountFor,
+  UNIT_STEPPER,
   type BuilderState,
   type BuilderExercise,
+  type ExerciseUnit,
   type PublishMode,
 } from '@/lib/builder'
 import type { ExerciseCategory } from '@/lib/types'
+import { createClient } from '@/lib/supabase/client'
 import { createCoachWorkout, updateCoachWorkout } from './actions'
 import { ExercisePicker, type PickerExercise } from './ExercisePicker'
 import { PublishPanel } from '@/components/PublishPanel'
@@ -102,6 +105,31 @@ export default function BuilderClient({
     targetRound: null,
     editingId: null,
   })
+
+  // --- image upload (Task 3): same client-side-upload-then-store-public-URL
+  // pattern as the Recipe Builder (recipe-images), against workout-images.
+  const [supabase] = useState(() => createClient())
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imageError, setImageError] = useState<string | null>(null)
+  const onImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingImage(true)
+    setImageError(null)
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const path = `${crypto.randomUUID()}.${ext}`
+    const { error: upErr } = await supabase.storage
+      .from('workout-images')
+      .upload(path, file, { cacheControl: '3600', upsert: false })
+    if (upErr) {
+      setImageError(`Image upload failed: ${upErr.message}`)
+      setUploadingImage(false)
+      return
+    }
+    const { data } = supabase.storage.from('workout-images').getPublicUrl(path)
+    set('imageRef', data.publicUrl)
+    setUploadingImage(false)
+  }
 
   const set = <K extends keyof BuilderState>(key: K, value: BuilderState[K]) =>
     setState((s) => ({ ...s, [key]: value }))
@@ -274,7 +302,14 @@ export default function BuilderClient({
       </div>
 
       {/* Coach details */}
-      <CoachDetails state={state} set={set} onEquipmentEdited={() => setEquipmentTouched(true)} />
+      <CoachDetails
+        state={state}
+        set={set}
+        onEquipmentEdited={() => setEquipmentTouched(true)}
+        uploadingImage={uploadingImage}
+        imageError={imageError}
+        onImageChange={onImageChange}
+      />
 
       {/* Publish */}
       <PublishPanel
@@ -585,15 +620,29 @@ function ExerciseEditCard({
         />
       )}
 
+      {/* Unit picker (Task 1): only meaningful for the reps slot, and only
+          where a rep count actually survives to the saved detail — Circuit
+          always converts it to a station duration instead, so it stays
+          reps-only there. */}
+      {!isTimed && state.format !== 'Circuit' && (
+        <div className="flex gap-2">
+          {(['reps', 'calories', 'distance_m'] as ExerciseUnit[]).map((u) => (
+            <Chip key={u} active={ex.unit === u} onClick={() => patchExercise(ex.id, { unit: u })}>
+              {UNIT_STEPPER[u].label}
+            </Chip>
+          ))}
+        </div>
+      )}
+
       <BigStepper
         value={isTimed ? ex.seconds : ex.reps}
-        label={isTimed ? 'Time' : 'Reps'}
+        label={isTimed ? 'Time' : UNIT_STEPPER[ex.unit].label}
         display={isTimed ? formatRowDuration(ex.seconds) : `${ex.reps}`}
         disabled={disabledBig}
         onChange={(v) => patchExercise(ex.id, isTimed ? { seconds: v } : { reps: v })}
-        min={isTimed ? 5 : 1}
-        max={isTimed ? 600 : 100}
-        step={isTimed ? 5 : 1}
+        min={isTimed ? 5 : UNIT_STEPPER[ex.unit].min}
+        max={isTimed ? 600 : UNIT_STEPPER[ex.unit].max}
+        step={isTimed ? 5 : UNIT_STEPPER[ex.unit].step}
       />
 
       {state.format === 'Rounds' && (
@@ -636,14 +685,42 @@ function CoachDetails({
   state,
   set,
   onEquipmentEdited,
+  uploadingImage,
+  imageError,
+  onImageChange,
 }: {
   state: BuilderState
   set: <K extends keyof BuilderState>(key: K, value: BuilderState[K]) => void
   onEquipmentEdited: () => void
+  uploadingImage: boolean
+  imageError: string | null
+  onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }) {
   return (
     <div className="mt-8 pt-6 border-t border-blush-100 space-y-5">
       <Label>Coach details</Label>
+
+      <div>
+        <SubLabel>Image</SubLabel>
+        {state.imageRef ? (
+          <img
+            src={state.imageRef}
+            alt=""
+            className="w-full h-40 object-cover rounded-card mb-2"
+          />
+        ) : null}
+        <label className="inline-block rounded-pill bg-white border border-blush-100 px-4 py-2 text-sm font-medium text-ink-900 cursor-pointer hover:bg-blush-50 transition-colors">
+          {uploadingImage ? 'Uploading…' : state.imageRef ? 'Replace image' : 'Upload image'}
+          <input
+            type="file"
+            accept="image/*"
+            disabled={uploadingImage}
+            onChange={onImageChange}
+            className="hidden"
+          />
+        </label>
+        {imageError && <p className="text-xs text-blush-700 mt-2">{imageError}</p>}
+      </div>
 
       <div>
         <SubLabel>Category</SubLabel>

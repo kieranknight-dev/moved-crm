@@ -37,6 +37,14 @@ export interface WorkoutExercisePayload {
   round_index?: number
 }
 
+// Reps|Time chooses the STORAGE shape (a number vs. a duration); unit only
+// applies to the reps side and chooses what that number counts. No new
+// stored column: like isTimed itself, it's encoded straight into the
+// `detail` display string ("15 cal", "500 m") and reparsed on edit — the same
+// convention the app already uses for reps vs. seconds, so it needs no
+// schema change and decodes identically on iOS's existing detail parser.
+export type ExerciseUnit = 'reps' | 'calories' | 'distance_m'
+
 export interface BuilderExercise {
   id: string
   name: string
@@ -45,6 +53,7 @@ export interface BuilderExercise {
   isTimed: boolean
   reps: number
   seconds: number
+  unit: ExerciseUnit // meaningful only when !isTimed
   sets: number // Rounds ("Strength") only
   restSeconds: number // Rounds only — rest between sets
   roundIndex: number | null // Circuit/Tabata custom-rounds tag (1-based); null = uniform
@@ -82,6 +91,9 @@ export interface BuilderState {
   description: string
   equipment: string
   isNew: boolean
+  // Public URL in the workout-images bucket (Task 3); null = no image. Same
+  // column iOS already reads via Workout.imageURL (Models/Workout.swift).
+  imageRef: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -147,10 +159,18 @@ export function newBuilderExercise(roundIndex: number | null = null): BuilderExe
     isTimed: false,
     reps: 10,
     seconds: 30,
+    unit: 'reps',
     sets: 3,
     restSeconds: 45,
     roundIndex,
   }
+}
+
+// Step/range per unit for the shared reps-slot stepper (Task 1).
+export const UNIT_STEPPER: Record<ExerciseUnit, { label: string; min: number; max: number; step: number }> = {
+  reps: { label: 'Reps', min: 1, max: 100, step: 1 },
+  calories: { label: 'Cal', min: 5, max: 200, step: 5 },
+  distance_m: { label: 'Distance (m)', min: 10, max: 2000, step: 10 },
 }
 
 export function initialBuilderState(): BuilderState {
@@ -172,6 +192,7 @@ export function initialBuilderState(): BuilderState {
     description: '',
     equipment: '',
     isNew: true,
+    imageRef: null,
   }
 }
 
@@ -213,16 +234,32 @@ export function roundCountFor(state: BuilderState): number {
   return state.isCustomRounds ? physicalRoundCount(state) : state.rounds
 }
 
+// Unit suffix for the reps-slot value ("12", "15 cal", "500 m") — Circuit
+// never shows this (its reps entry always converts to a station duration
+// instead, so it stays plain regardless of `unit`).
+function repsQuantityText(ex: BuilderExercise): string {
+  switch (ex.unit) {
+    case 'calories':
+      return `${ex.reps} cal`
+    case 'distance_m':
+      return `${ex.reps} m`
+    default:
+      return `${ex.reps}`
+  }
+}
+
 export function quantityPillText(state: BuilderState, ex: BuilderExercise): string {
   switch (state.format) {
     case 'Tabata':
       return '0:20'
     case 'Rounds': {
-      const qty = ex.isTimed ? formatRowDuration(ex.seconds) : `${ex.reps}`
+      const qty = ex.isTimed ? formatRowDuration(ex.seconds) : repsQuantityText(ex)
       return `${ex.sets} × ${qty}`
     }
-    default:
+    case 'Circuit':
       return ex.isTimed ? formatRowDuration(ex.seconds) : `×${ex.reps}`
+    default:
+      return ex.isTimed ? formatRowDuration(ex.seconds) : repsQuantityText(ex)
   }
 }
 
@@ -319,16 +356,30 @@ export function liveSummaryText(state: BuilderState): string {
   }
 }
 
+// "12 reps" / "15 cal" / "500 m" — the exact suffix iOS's parseExerciseDetail
+// (WorkoutStepSequenceGenerators.swift) looks for to reconstruct the unit.
+function unitDetailText(ex: BuilderExercise): string {
+  switch (ex.unit) {
+    case 'calories':
+      return `${ex.reps} cal`
+    case 'distance_m':
+      return `${ex.reps} m`
+    default:
+      return `${ex.reps} reps`
+  }
+}
+
 function detailText(state: BuilderState, ex: BuilderExercise): string {
   switch (state.format) {
     case 'Circuit':
       // Circuit stations are clock-driven: a reps choice is converted to its
       // ~3s/rep time equivalent so the generated station length stays coherent.
+      // Units don't apply here — the unit picker is hidden for Circuit.
       return `${workSeconds(ex)} sec`
     case 'Tabata':
       return '20 sec'
     default:
-      return ex.isTimed ? `${ex.seconds} sec` : `${ex.reps} reps`
+      return ex.isTimed ? `${ex.seconds} sec` : unitDetailText(ex)
   }
 }
 
@@ -419,6 +470,7 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
     posted_ago: postedAgoFor(publish),
     description: state.description.trim(),
     equipment: state.equipment.trim(),
+    image_ref: state.imageRef,
     format: state.format,
     rounds,
     status: publish.status,
@@ -466,13 +518,19 @@ export function formatPostedAgo(publishAtIso: string): string {
 // like "10 reps each side" collapse to their leading number.
 // ---------------------------------------------------------------------------
 
-function parseDetail(detail: string): { isTimed: boolean; reps: number; seconds: number } {
+function parseDetail(
+  detail: string
+): { isTimed: boolean; reps: number; seconds: number; unit: ExerciseUnit } {
   const sec = detail.match(/(\d+)\s*sec/i)
-  if (sec) return { isTimed: true, reps: 10, seconds: parseInt(sec[1], 10) }
+  if (sec) return { isTimed: true, reps: 10, seconds: parseInt(sec[1], 10), unit: 'reps' }
+  const cal = detail.match(/(\d+)\s*cal/i)
+  if (cal) return { isTimed: false, reps: parseInt(cal[1], 10), seconds: 30, unit: 'calories' }
+  const dist = detail.match(/(\d+)\s*m\b/i)
+  if (dist) return { isTimed: false, reps: parseInt(dist[1], 10), seconds: 30, unit: 'distance_m' }
   const rep = detail.match(/(\d+)\s*rep/i)
-  if (rep) return { isTimed: false, reps: parseInt(rep[1], 10), seconds: 30 }
+  if (rep) return { isTimed: false, reps: parseInt(rep[1], 10), seconds: 30, unit: 'reps' }
   const num = detail.match(/(\d+)/)
-  return { isTimed: false, reps: num ? parseInt(num[1], 10) : 10, seconds: 30 }
+  return { isTimed: false, reps: num ? parseInt(num[1], 10) : 10, seconds: 30, unit: 'reps' }
 }
 
 // Columns builderStateFromWorkout needs. WorkoutRow has all of them (plus more).
@@ -490,6 +548,7 @@ type WorkoutForEdit = Pick<
   | 'description'
   | 'equipment'
   | 'is_new'
+  | 'image_ref'
 >
 
 export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
@@ -509,6 +568,7 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
       isTimed: format === 'Tabata' ? true : d.isTimed,
       reps: d.reps,
       seconds: format === 'Tabata' ? 20 : d.seconds,
+      unit: d.unit,
       sets: typeof e?.sets === 'number' ? e.sets : 3,
       restSeconds: typeof e?.rest_after_sets_seconds === 'number' ? e.rest_after_sets_seconds : 45,
       roundIndex: typeof e?.round_index === 'number' ? e.round_index : null,
@@ -569,6 +629,7 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     description: w.description ?? '',
     equipment: w.equipment ?? '',
     isNew: !!w.is_new,
+    imageRef: w.image_ref ?? null,
   }
 }
 
