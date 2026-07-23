@@ -14,6 +14,7 @@ import type {
   WorkoutStatus,
   WorkoutInsert,
   WorkoutRow,
+  StructuredExerciseUnit,
 } from '@/lib/types'
 
 // How the workout should be published, resolved to concrete status + publish_at
@@ -32,6 +33,9 @@ export interface WorkoutExercisePayload {
   id: string
   name: string
   detail: string
+  value?: number
+  unit?: StructuredExerciseUnit
+  rest_seconds?: number
   sets?: number
   rest_after_sets_seconds?: number
   round_index?: number
@@ -256,8 +260,6 @@ export function quantityPillText(state: BuilderState, ex: BuilderExercise): stri
       const qty = ex.isTimed ? formatRowDuration(ex.seconds) : repsQuantityText(ex)
       return `${ex.sets} × ${qty}`
     }
-    case 'Circuit':
-      return ex.isTimed ? formatRowDuration(ex.seconds) : `×${ex.reps}`
     default:
       return ex.isTimed ? formatRowDuration(ex.seconds) : repsQuantityText(ex)
   }
@@ -371,16 +373,24 @@ function unitDetailText(ex: BuilderExercise): string {
 
 function detailText(state: BuilderState, ex: BuilderExercise): string {
   switch (state.format) {
-    case 'Circuit':
-      // Circuit stations are clock-driven: a reps choice is converted to its
-      // ~3s/rep time equivalent so the generated station length stays coherent.
-      // Units don't apply here — the unit picker is hidden for Circuit.
-      return `${workSeconds(ex)} sec`
     case 'Tabata':
       return '20 sec'
     default:
+      // Circuit used to force every station onto a ~3s/rep seconds conversion
+      // here (workSeconds), discarding the authored reps/cal/distance value —
+      // that mismatch is exactly the bug the structured value/unit/rest_seconds
+      // fields (see toPayload below) fix. detail is now always a faithful
+      // projection of the actual authored value, same as every other format.
       return ex.isTimed ? `${ex.seconds} sec` : unitDetailText(ex)
   }
+}
+
+// Structured value for a Circuit exercise — the source of truth going
+// forward; `detail` above is derived from the same isTimed/reps/seconds/unit
+// state, so the two can never disagree the way the old forced-seconds
+// conversion could.
+function structuredValue(ex: BuilderExercise): { value: number; unit: StructuredExerciseUnit } {
+  return ex.isTimed ? { value: ex.seconds, unit: 'seconds' } : { value: ex.reps, unit: ex.unit }
 }
 
 // ---------------------------------------------------------------------------
@@ -425,6 +435,15 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
     if (state.format === 'Rounds') {
       payload.sets = ex.sets
       payload.rest_after_sets_seconds = ex.restSeconds
+    }
+    if (state.format === 'Circuit') {
+      // Structured fields are the source of truth for Circuit going forward
+      // (detail above is only a derived projection for legacy/back-compat
+      // readers). No per-exercise rest input exists in the builder yet, so
+      // rest_seconds stays unset — a future feature's natural home.
+      const sv = structuredValue(ex)
+      payload.value = sv.value
+      payload.unit = sv.unit
     }
     if (isCustomRoundsFormat && roundIndex != null) {
       payload.round_index = roundIndex
@@ -558,7 +577,16 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
   const isCustomRounds = isRoundsFmt && raw.some((e) => typeof e?.round_index === 'number')
 
   const rawExercises: BuilderExercise[] = raw.map((e) => {
-    const d = parseDetail(String(e?.detail ?? ''))
+    // Circuit: prefer the structured fields (source of truth) over reparsing
+    // detail text — falls back to detail-parsing only for rows saved before
+    // the 2026-07-23 migration, which never got value/unit backfilled.
+    const structured =
+      format === 'Circuit' && typeof e?.value === 'number' && typeof e?.unit === 'string'
+        ? (e.unit === 'seconds'
+            ? { isTimed: true, reps: 10, seconds: e.value, unit: 'reps' as const }
+            : { isTimed: false, reps: e.value, seconds: 30, unit: e.unit as ExerciseUnit })
+        : null
+    const d = structured ?? parseDetail(String(e?.detail ?? ''))
     return {
       // Always fresh: a repeated round (see buildInsert) reuses the same id
       // across its physical round_index copies, which would otherwise produce
@@ -586,7 +614,9 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
 
   if (isCustomRounds) {
     const signature = (exs: BuilderExercise[]) =>
-      JSON.stringify(exs.map((e) => ({ name: e.name, isTimed: e.isTimed, reps: e.reps, seconds: e.seconds })))
+      JSON.stringify(
+        exs.map((e) => ({ name: e.name, isTimed: e.isTimed, reps: e.reps, seconds: e.seconds, unit: e.unit }))
+      )
 
     const physicalRounds: BuilderExercise[][] = []
     for (let r = 1; r <= customRoundCount; r++) {

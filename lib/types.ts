@@ -116,10 +116,23 @@ export type ExerciseCategory =
 
 // One element of the workouts.exercises JSONB array — mirrors the Swift
 // `Exercise` struct's CodingKeys exactly.
+// Structured value kind for Circuit exercises (supersedes inferring this from
+// `detail` text). 'seconds' covers what used to be the separate isTimed flag —
+// unit is now authoritative for what `value` counts, timed or not.
+export type StructuredExerciseUnit = 'reps' | 'seconds' | 'calories' | 'distance_m'
+
 export interface WorkoutExercise {
   id: string // UUID
   name: string
+  // Circuit: deprecated once callers read value/unit/rest_seconds instead —
+  // still written (derived from those fields, not hand-formatted) so legacy
+  // readers and the required Swift `detail` field keep decoding. Other
+  // formats still treat this as their source of truth for now.
   detail: string // display string: "12 reps", "45 sec", "10 reps each side"
+  // Circuit only (2026-07-23 migration: 20260723090000_circuit_structured_values.sql).
+  value?: number | null
+  unit?: StructuredExerciseUnit | null
+  rest_seconds?: number | null // per-exercise rest; null = none authored
   sets?: number | null // Strength only; null falls back to workout.rounds
   rest_after_sets_seconds?: number | null // Strength only; null falls back to 45
   round_index?: number | null // Circuit/Tabata custom-rounds tag, 1-based; null = same-every-round

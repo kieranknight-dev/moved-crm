@@ -620,11 +620,11 @@ function ExerciseEditCard({
         />
       )}
 
-      {/* Unit picker (Task 1): only meaningful for the reps slot, and only
-          where a rep count actually survives to the saved detail — Circuit
-          always converts it to a station duration instead, so it stays
-          reps-only there. */}
-      {!isTimed && state.format !== 'Circuit' && (
+      {/* Unit picker: only meaningful for the reps slot. Circuit now saves
+          the real authored value/unit (structured fields) instead of forcing
+          a seconds conversion, so it gets the same picker as every other
+          format. */}
+      {!isTimed && (
         <div className="flex gap-2">
           {(['reps', 'calories', 'distance_m'] as ExerciseUnit[]).map((u) => (
             <Chip key={u} active={ex.unit === u} onClick={() => patchExercise(ex.id, { unit: u })}>
