@@ -1,11 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { ExerciseCategory } from '@/lib/types'
+import type { ExerciseBodyPart, ExerciseCategory } from '@/lib/types'
 
 export interface PickerExercise {
   name: string
   category: ExerciseCategory
+  bodyPart: ExerciseBodyPart | null
 }
 
 const CATEGORY_ORDER: ExerciseCategory[] = [
@@ -13,13 +14,33 @@ const CATEGORY_ORDER: ExerciseCategory[] = [
   'Dumbbell',
   'Barbell',
   'Kettlebell',
+  'Resistance Band',
+  'Cardio',
   'Machine',
   'Other',
 ]
 
+const BODY_PART_ORDER: ExerciseBodyPart[] = [
+  'Upper Body',
+  'Lower Body',
+  'Abs',
+  'Cardio',
+  'Full Body',
+]
+
+type ViewMode = 'all' | 'category' | 'bodyPart'
+
+const VIEW_MODES: { mode: ViewMode; label: string }[] = [
+  { mode: 'all', label: 'All' },
+  { mode: 'category', label: 'Category' },
+  { mode: 'bodyPart', label: 'Body Part' },
+]
+
 // Modal for choosing an exercise name. Mirrors the iOS ExercisePickerView:
-// category filter + search with prefix-matches ranked above contains-matches
-// (both alphabetical), plus a "Use '<query>'" row for custom names.
+// view-mode switch (All / Category / Body Part) + search with prefix-matches
+// ranked above contains-matches (both alphabetical), plus a "Use '<query>'"
+// row for custom names. equipment_required is internal-only (Gigi/equipment
+// tagging) and is never surfaced here.
 export function ExercisePicker({
   exercises,
   onSelect,
@@ -30,30 +51,73 @@ export function ExercisePicker({
   onClose: () => void
 }) {
   const [query, setQuery] = useState('')
+  const [viewMode, setViewMode] = useState<ViewMode>('all')
   const [category, setCategory] = useState<ExerciseCategory | null>(null)
+  const [bodyPart, setBodyPart] = useState<ExerciseBodyPart | null>(null)
 
   const trimmed = query.trim()
 
-  const results = useMemo(() => {
-    const byCategory = category
-      ? exercises.filter((e) => e.category === category)
-      : exercises
-    const sortAsc = (a: PickerExercise, b: PickerExercise) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  const categories = useMemo(
+    () => CATEGORY_ORDER.filter((c) => exercises.some((e) => e.category === c)),
+    [exercises]
+  )
+  const bodyParts = useMemo(
+    () => BODY_PART_ORDER.filter((b) => exercises.some((e) => e.bodyPart === b)),
+    [exercises]
+  )
 
-    if (!trimmed) return [...byCategory].sort(sortAsc)
+  const sortAsc = (a: PickerExercise, b: PickerExercise) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
 
+  const search = (list: PickerExercise[]) => {
+    if (!trimmed) return [...list].sort(sortAsc)
     const q = trimmed.toLowerCase()
-    const prefix = byCategory
-      .filter((e) => e.name.toLowerCase().startsWith(q))
-      .sort(sortAsc)
-    const contains = byCategory
+    const prefix = list.filter((e) => e.name.toLowerCase().startsWith(q)).sort(sortAsc)
+    const contains = list
       .filter((e) => !e.name.toLowerCase().startsWith(q) && e.name.toLowerCase().includes(q))
       .sort(sortAsc)
     return [...prefix, ...contains]
-  }, [exercises, category, trimmed])
+  }
 
-  const showCustomRow = trimmed.length > 0 && results.length === 0
+  // Flat results: "All" mode, or Category/Body Part mode once a specific
+  // value is selected via its chip row.
+  const flatResults = useMemo(() => {
+    let base = exercises
+    if (viewMode === 'category' && category) base = base.filter((e) => e.category === category)
+    if (viewMode === 'bodyPart' && bodyPart) base = base.filter((e) => e.bodyPart === bodyPart)
+    return search(base)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exercises, viewMode, category, bodyPart, trimmed])
+
+  // Grouped sections: Category/Body Part mode with no specific value picked —
+  // one section per group (real enum values present in the data), in a
+  // fixed order, each sorted/searched the same way as the flat list.
+  const sections = useMemo(() => {
+    if (viewMode === 'category' && !category) {
+      return categories
+        .map((c) => ({ label: c, items: search(exercises.filter((e) => e.category === c)) }))
+        .filter((s) => s.items.length > 0)
+    }
+    if (viewMode === 'bodyPart' && !bodyPart) {
+      return bodyParts
+        .map((b) => ({ label: b, items: search(exercises.filter((e) => e.bodyPart === b)) }))
+        .filter((s) => s.items.length > 0)
+    }
+    return null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, category, bodyPart, categories, bodyParts, exercises, trimmed])
+
+  const totalShown = sections
+    ? sections.reduce((n, s) => n + s.items.length, 0)
+    : flatResults.length
+
+  const showCustomRow = trimmed.length > 0 && totalShown === 0
+
+  const changeMode = (mode: ViewMode) => {
+    setViewMode(mode)
+    setCategory(null)
+    setBodyPart(null)
+  }
 
   return (
     <div
@@ -85,21 +149,50 @@ export function ExercisePicker({
             placeholder="Search exercises"
             className="w-full rounded-card bg-blush-50 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-blush-300"
           />
-          <div className="flex gap-2 overflow-x-auto py-3 -mx-5 px-5">
-            <CategoryPill
-              label="All"
-              active={category === null}
-              onClick={() => setCategory(null)}
-            />
-            {CATEGORY_ORDER.map((c) => (
-              <CategoryPill
-                key={c}
-                label={c}
-                active={category === c}
-                onClick={() => setCategory(c)}
-              />
+
+          <div className="grid grid-cols-3 gap-1 rounded-card bg-blush-50 p-1 mt-3">
+            {VIEW_MODES.map(({ mode, label }) => (
+              <button
+                key={mode}
+                onClick={() => changeMode(mode)}
+                className={`rounded-[14px] py-2 text-sm font-medium transition-colors ${
+                  viewMode === mode ? 'bg-white text-ink-900 shadow-card' : 'text-ink-500'
+                }`}
+              >
+                {label}
+              </button>
             ))}
           </div>
+
+          {viewMode === 'category' && (
+            <div className="flex gap-2 overflow-x-auto py-3 -mx-5 px-5">
+              <CategoryPill label="All" active={category === null} onClick={() => setCategory(null)} />
+              {categories.map((c) => (
+                <CategoryPill
+                  key={c}
+                  label={c}
+                  active={category === c}
+                  onClick={() => setCategory(c)}
+                />
+              ))}
+            </div>
+          )}
+
+          {viewMode === 'bodyPart' && (
+            <div className="flex gap-2 overflow-x-auto py-3 -mx-5 px-5">
+              <CategoryPill label="All" active={bodyPart === null} onClick={() => setBodyPart(null)} />
+              {bodyParts.map((b) => (
+                <CategoryPill
+                  key={b}
+                  label={b}
+                  active={bodyPart === b}
+                  onClick={() => setBodyPart(b)}
+                />
+              ))}
+            </div>
+          )}
+
+          {viewMode === 'all' && <div className="h-3" />}
         </div>
 
         <ul className="flex-1 overflow-y-auto px-5 pb-5">
@@ -114,18 +207,25 @@ export function ExercisePicker({
               </button>
             </li>
           )}
-          {results.map((e) => (
-            <li key={e.name}>
-              <button
-                onClick={() => onSelect(e.name)}
-                className="w-full flex items-center justify-between py-3 text-left text-sm text-ink-900 border-b border-blush-50 hover:text-blush-600 transition-colors"
-              >
-                <span>{e.name}</span>
-                <span className="text-[11px] text-ink-300">{e.category}</span>
-              </button>
-            </li>
-          ))}
-          {results.length === 0 && !showCustomRow && (
+
+          {sections
+            ? sections.map((s) => (
+                <li key={s.label}>
+                  <div className="sticky top-0 bg-white pt-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-ink-300">
+                    {s.label} · {s.items.length}
+                  </div>
+                  <ul>
+                    {s.items.map((e) => (
+                      <ExerciseRow key={e.name} exercise={e} onSelect={onSelect} />
+                    ))}
+                  </ul>
+                </li>
+              ))
+            : flatResults.map((e) => (
+                <ExerciseRow key={e.name} exercise={e} onSelect={onSelect} />
+              ))}
+
+          {totalShown === 0 && !showCustomRow && (
             <li className="py-8 text-center text-sm text-ink-500">
               Type to search {exercises.length.toLocaleString()} exercises.
             </li>
@@ -133,6 +233,26 @@ export function ExercisePicker({
         </ul>
       </div>
     </div>
+  )
+}
+
+function ExerciseRow({
+  exercise,
+  onSelect,
+}: {
+  exercise: PickerExercise
+  onSelect: (name: string) => void
+}) {
+  return (
+    <li>
+      <button
+        onClick={() => onSelect(exercise.name)}
+        className="w-full flex items-center justify-between py-3 text-left text-sm text-ink-900 border-b border-blush-50 hover:text-blush-600 transition-colors"
+      >
+        <span>{exercise.name}</span>
+        <span className="text-[11px] text-ink-300">{exercise.category}</span>
+      </button>
+    </li>
   )
 }
 

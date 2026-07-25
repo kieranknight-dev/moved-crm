@@ -111,8 +111,18 @@ export type ExerciseCategory =
   | 'Dumbbell'
   | 'Barbell'
   | 'Kettlebell'
+  | 'Resistance Band'
+  | 'Cardio'
   | 'Machine'
   | 'Other'
+
+// enforced by a CHECK constraint on exercises.body_part; nullable in the DB.
+export type ExerciseBodyPart =
+  | 'Upper Body'
+  | 'Lower Body'
+  | 'Abs'
+  | 'Cardio'
+  | 'Full Body'
 
 // One element of the workouts.exercises JSONB array — mirrors the Swift
 // `Exercise` struct's CodingKeys exactly.
@@ -152,8 +162,10 @@ export interface Workout
   exercises: WorkoutExercise[]
 }
 
-// exercises row with category narrowed. Note: `name` is UNIQUE and is the
-// identity the iOS picker uses.
-export interface Exercise extends Omit<ExerciseRow, 'category'> {
+// exercises row with category/body_part narrowed. Note: `name` is UNIQUE and
+// is the identity the iOS picker uses. `equipment_required` is internal-only
+// (powers Gigi/equipment tagging) and is never surfaced in picker UI.
+export interface Exercise extends Omit<ExerciseRow, 'category' | 'body_part'> {
   category: ExerciseCategory
+  body_part: ExerciseBodyPart | null
 }

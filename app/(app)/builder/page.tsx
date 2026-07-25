@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { ExerciseCategory } from '@/lib/types'
+import type { ExerciseBodyPart, ExerciseCategory } from '@/lib/types'
 import { builderStateFromWorkout, publishInitFromStatus } from '@/lib/builder'
 import BuilderClient, { type BuilderInit } from './BuilderClient'
 import type { PickerExercise } from './ExercisePicker'
 
-// Reads the 874-row exercise library (authenticated read is allowed by RLS)
-// and hands it to the client builder. With ?id=, loads that workout for editing
+// Reads the exercise library (authenticated read is allowed by RLS) and
+// hands it to the client builder. With ?id=, loads that workout for editing
 // (via the admin client, since drafts/scheduled aren't RLS-visible). Dynamic.
 export const dynamic = 'force-dynamic'
 
@@ -18,12 +18,13 @@ export default async function BuilderPage({
   const supabase = createClient()
   const { data, error } = await supabase
     .from('exercises')
-    .select('name, category')
+    .select('name, category, body_part')
     .order('name')
 
   const exercises: PickerExercise[] = (data ?? []).map((e) => ({
     name: e.name,
     category: e.category as ExerciseCategory,
+    bodyPart: e.body_part as ExerciseBodyPart | null,
   }))
 
   if (error) {

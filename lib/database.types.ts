@@ -12,49 +12,30 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       exercises: {
         Row: {
+          body_part: string | null
           category: string
           created_at: string
+          equipment_required: string[]
           id: string
           name: string
         }
         Insert: {
+          body_part?: string | null
           category: string
           created_at?: string
+          equipment_required?: string[]
           id?: string
           name: string
         }
         Update: {
+          body_part?: string | null
           category?: string
           created_at?: string
+          equipment_required?: string[]
           id?: string
           name?: string
         }
@@ -136,6 +117,7 @@ export type Database = {
           ingredients: Json
           is_premium: boolean
           name: string
+          notes: string | null
           prep_minutes: number
           publish_at: string | null
           servings: number
@@ -152,6 +134,7 @@ export type Database = {
           ingredients?: Json
           is_premium?: boolean
           name: string
+          notes?: string | null
           prep_minutes: number
           publish_at?: string | null
           servings?: number
@@ -168,6 +151,7 @@ export type Database = {
           ingredients?: Json
           is_premium?: boolean
           name?: string
+          notes?: string | null
           prep_minutes?: number
           publish_at?: string | null
           servings?: number
@@ -175,6 +159,39 @@ export type Database = {
           steps?: Json
         }
         Relationships: []
+      }
+      saved_workouts: {
+        Row: {
+          created_at: string
+          user_id: string
+          workout_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+          workout_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_workouts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_workouts_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workout_history: {
         Row: {
@@ -441,9 +458,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
