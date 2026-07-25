@@ -415,8 +415,8 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       className={`relative h-6 w-10 rounded-pill transition-colors ${checked ? 'bg-blush-500' : 'bg-blush-100'}`}
     >
       <span
-        className={`absolute top-0.5 h-5 w-5 rounded-pill bg-white shadow-card transition-transform ${
-          checked ? 'translate-x-[18px]' : 'translate-x-0.5'
+        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-pill bg-white shadow-card transition-transform ${
+          checked ? 'translate-x-4' : 'translate-x-0'
         }`}
       />
     </button>
