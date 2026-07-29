@@ -10,12 +10,14 @@ import {
   FORMAT_DESCRIPTION,
   REST_CHIP_VALUES,
   CAP_CHIP_VALUES,
+  FOR_TIME_CAP_CHIP_VALUES,
   CATEGORIES,
   DIFFICULTIES,
   restChipLabel,
   quantityPillText,
   liveSummaryText,
   estimatedDuration,
+  effectiveDuration,
   formatRowDuration,
   repeatCountFor,
   UNIT_STEPPER,
@@ -244,7 +246,7 @@ export default function BuilderClient({
         ? 'Save as draft'
         : publishMode === 'schedule'
           ? 'Schedule workout'
-          : `Publish now${validCount > 0 ? ` · ${estimatedDuration(state)} min` : ''}`
+          : `Publish now${validCount > 0 ? ` · ${effectiveDuration(state)} min` : ''}`
 
   return (
     <div className="max-w-2xl pb-32">
@@ -273,6 +275,9 @@ export default function BuilderClient({
 
       {/* Format settings */}
       <FormatSettings state={state} set={set} onRoundsModeChange={onRoundsModeChange} />
+
+      {/* Estimated time override */}
+      <DurationOverride state={state} set={set} />
 
       {/* Exercises */}
       <div className="mt-6">
@@ -438,7 +443,7 @@ function FormatSettings({
       {state.forTimeCapEnabled && (
         <div className="mt-3">
           <ChipRow
-            values={CAP_CHIP_VALUES}
+            values={FOR_TIME_CAP_CHIP_VALUES}
             selected={state.forTimeCapMinutes}
             label={(v) => `${v}`}
             suffix="min"
@@ -446,6 +451,44 @@ function FormatSettings({
           />
         </div>
       )}
+    </SettingCard>
+  )
+}
+
+// Manual override for the workout's estimated duration — the reps-based
+// auto-estimate (~3s/rep) is sometimes wrong for exercises that are
+// reps-labelled but not actually time-proportional. Blank = keep using the
+// auto-estimate; a value here wins and is what gets saved/shown in the app.
+function DurationOverride({
+  state,
+  set,
+}: {
+  state: BuilderState
+  set: <K extends keyof BuilderState>(key: K, value: BuilderState[K]) => void
+}) {
+  const auto = estimatedDuration(state)
+  return (
+    <SettingCard>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <Label>Estimated time (min)</Label>
+          <p className="text-xs text-ink-500 mt-0.5">
+            Leave blank to use the auto-estimate (~{auto} min).
+          </p>
+        </div>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          placeholder={`${auto}`}
+          value={state.durationOverrideMinutes ?? ''}
+          onChange={(e) => {
+            const raw = e.target.value
+            set('durationOverrideMinutes', raw === '' ? null : Math.max(1, parseInt(raw, 10) || 1))
+          }}
+          className="w-20 rounded-card bg-white shadow-card px-3 py-2 text-sm text-center outline-none focus:ring-1 focus:ring-blush-300"
+        />
+      </div>
     </SettingCard>
   )
 }

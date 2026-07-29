@@ -89,6 +89,13 @@ export interface BuilderState {
 
   exercises: BuilderExercise[]
 
+  // Manual override for the workout's duration (minutes), shown/saved in
+  // place of the auto-estimate computed from the exercises below — the
+  // reps-based estimate (~3s/rep) is sometimes wrong for exercises that are
+  // reps-labelled but not actually time-proportional. null = no override,
+  // use estimatedDuration(state) as before.
+  durationOverrideMinutes: number | null
+
   // Coach metadata (CRM-only — iOS hardcodes these for user workouts).
   category: WorkoutCategory
   difficulty: WorkoutDifficulty
@@ -135,6 +142,7 @@ export const FORMAT_DESCRIPTION: Record<WorkoutFormat, string> = {
 
 export const REST_CHIP_VALUES = [0, 30, 60, 120]
 export const CAP_CHIP_VALUES = [8, 10, 12, 15, 20]
+export const FOR_TIME_CAP_CHIP_VALUES = [8, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 
 export const CATEGORIES: WorkoutCategory[] = [
   'Strength',
@@ -191,6 +199,7 @@ export function initialBuilderState(): BuilderState {
     forTimeCapMinutes: 15,
     emomMinutes: 10,
     exercises: [],
+    durationOverrideMinutes: null,
     category: 'Full Body',
     difficulty: 'Intermediate',
     description: '',
@@ -337,16 +346,26 @@ export function estimatedDuration(state: BuilderState): number {
   }
 }
 
+// The workout's actual duration: the admin's manual override if one is set,
+// otherwise the auto-estimate computed from the authored exercises. This is
+// what gets saved to workouts.duration and shown everywhere in the builder.
+export function effectiveDuration(state: BuilderState): number {
+  return state.durationOverrideMinutes ?? estimatedDuration(state)
+}
+
 export function liveSummaryText(state: BuilderState): string {
   const { exercises } = state
+  const overridden = state.durationOverrideMinutes != null
   switch (state.format) {
     case 'Rounds': {
       const totalSets = exercises.reduce((s, ex) => s + ex.sets, 0)
-      return `${exercises.length} exercise${exercises.length === 1 ? '' : 's'} · ${totalSets} sets`
+      const base = `${exercises.length} exercise${exercises.length === 1 ? '' : 's'} · ${totalSets} sets`
+      return overridden ? `${base} · ${effectiveDuration(state)} min` : base
     }
     case 'AMRAP':
       return formatRowDuration(state.amrapCapMinutes * 60)
     case 'For Time':
+      if (overridden) return `${effectiveDuration(state)} min`
       return state.forTimeCapEnabled
         ? `cap ${state.forTimeCapMinutes} min`
         : `~${estimatedDuration(state)} min`
@@ -354,7 +373,9 @@ export function liveSummaryText(state: BuilderState): string {
       return `${state.emomMinutes} min · ~${exercises.length} exercises`
     case 'Tabata':
     case 'Circuit':
-      return `×${roundCountFor(state)} rounds · ~${estimatedDuration(state)} min`
+      return overridden
+        ? `×${roundCountFor(state)} rounds · ${effectiveDuration(state)} min`
+        : `×${roundCountFor(state)} rounds · ~${estimatedDuration(state)} min`
   }
 }
 
@@ -474,7 +495,7 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
 
   const title = state.workoutName.trim() || `${FORMAT_CHIP_LABEL[state.format]} Workout`
   const rounds = roundCountFor(state)
-  const duration = state.format === 'EMOM' ? state.emomMinutes : estimatedDuration(state)
+  const duration = effectiveDuration(state)
 
   const insert: WorkoutInsert = {
     user_id: null,
@@ -640,7 +661,7 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     customRoundCount = collapsed.length
   }
 
-  return {
+  const base: BuilderState = {
     workoutName: w.title ?? '',
     format,
     isCustomRounds,
@@ -654,6 +675,7 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
       w.for_time_cap_seconds != null ? Math.round(w.for_time_cap_seconds / 60) : 15,
     emomMinutes: format === 'EMOM' ? (w.duration ?? 10) : 10,
     exercises,
+    durationOverrideMinutes: null,
     category: w.category as WorkoutCategory,
     difficulty: w.difficulty as WorkoutDifficulty,
     description: w.description ?? '',
@@ -661,6 +683,16 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     isNew: !!w.is_new,
     imageRef: w.image_ref ?? null,
   }
+
+  // No separate "was this overridden" column — infer it: if the saved
+  // duration doesn't match what the auto-estimate would produce from the
+  // reconstructed state, the admin must have typed a manual value, so prefill
+  // the override with the saved duration rather than silently losing it.
+  const auto = estimatedDuration(base)
+  const durationOverrideMinutes =
+    w.duration != null && w.duration !== auto ? w.duration : null
+
+  return { ...base, durationOverrideMinutes }
 }
 
 // Local "YYYY-MM-DDTHH:mm" for a datetime-local input, from an ISO timestamp.
