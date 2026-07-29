@@ -1,6 +1,6 @@
 'use client'
 
-import type { PublishMode } from '@/lib/builder'
+import { isoToLocalInput, type PublishMode } from '@/lib/builder'
 
 // Generic publish-mode selector: draft / schedule / publish. Shared between
 // the Workout Builder and Recipe Builder — this component only deals in
@@ -23,8 +23,11 @@ export function PublishPanel({
   setScheduledLocal: (v: string) => void
 }) {
   const active = PUBLISH_OPTIONS.find((o) => o.mode === mode)!
-  // Minimum selectable time: one minute from now, in local datetime-local format.
-  const min = new Date(Date.now() + 60_000).toISOString().slice(0, 16)
+  // Minimum selectable time: one minute from now, in Sydney wall-clock time
+  // (datetime-local's value is compared as local time, so this must be
+  // formatted the same way scheduling itself is interpreted — see
+  // localInputToIso/isoToLocalInput in lib/builder.ts).
+  const min = isoToLocalInput(new Date(Date.now() + 60_000).toISOString())
   return (
     <div className="mt-8 pt-6 border-t border-blush-100">
       <span className="text-[11px] font-medium uppercase tracking-wider text-ink-300">

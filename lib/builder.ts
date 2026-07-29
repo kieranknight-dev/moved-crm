@@ -695,11 +695,62 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
   return { ...base, durationOverrideMinutes }
 }
 
-// Local "YYYY-MM-DDTHH:mm" for a datetime-local input, from an ISO timestamp.
+// MOVED. is an Australian app — scheduling is always anchored to Sydney wall
+// clock time (AEST/AEDT, DST-aware via Intl), regardless of what timezone the
+// admin's own browser/device happens to be set to. Previously this used the
+// browser's ambient local timezone (native Date getters/`new Date(string)`),
+// which silently scheduled at the wrong instant on any machine not itself set
+// to an Australian zone.
+const SCHEDULING_TIME_ZONE = 'Australia/Sydney'
+
+const schedulingFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: SCHEDULING_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+
+function schedulingParts(d: Date) {
+  const parts = schedulingFormatter.formatToParts(d)
+  const get = (type: string) => Number(parts.find((p) => p.type === type)!.value)
+  // Some environments report midnight as hour '24' with hour12: false.
+  return {
+    year: get('year'),
+    month: get('month'),
+    day: get('day'),
+    hour: get('hour') % 24,
+    minute: get('minute'),
+    second: get('second'),
+  }
+}
+
+// Sydney wall-clock "YYYY-MM-DDTHH:mm" for a datetime-local input, from an
+// absolute ISO timestamp — the inverse of localInputToIso below.
 export function isoToLocalInput(iso: string): string {
-  const d = new Date(iso)
+  const p = schedulingParts(new Date(iso))
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`
+}
+
+// Converts a datetime-local input value ("YYYY-MM-DDTHH:mm"), interpreted as
+// Sydney wall-clock time, to an absolute ISO instant. Uses the standard
+// "guess UTC, measure the zone's actual offset at that instant, correct"
+// approach so AEST/AEDT (DST) is handled correctly without a timezone library.
+export function localInputToIso(local: string): string {
+  const [datePart, timePart] = local.split('T')
+  const [y, mo, d] = datePart.split('-').map(Number)
+  const [h, mi] = timePart.split(':').map(Number)
+
+  const guess = Date.UTC(y, mo - 1, d, h, mi, 0)
+  const p = schedulingParts(new Date(guess))
+  const wallInZoneAsUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second)
+  const offsetMs = wallInZoneAsUtc - guess
+
+  return new Date(guess - offsetMs).toISOString()
 }
 
 // Initial publish selector state when editing an existing workout.

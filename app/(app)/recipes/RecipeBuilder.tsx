@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { PublishMode } from '@/lib/builder'
+import { localInputToIso, type PublishMode } from '@/lib/builder'
 import { PublishPanel } from '@/components/PublishPanel'
 import {
   RECIPE_CATEGORIES,
@@ -91,8 +91,10 @@ export default function RecipeBuilder({ init }: { init?: RecipeBuilderInit }) {
 
   const onSave = () => {
     setError(null)
+    // Scheduling is always Sydney wall-clock time (AEST/AEDT), not whatever
+    // timezone the admin's browser/device happens to be set to.
     const scheduledIso =
-      publishMode === 'schedule' && scheduledLocal ? new Date(scheduledLocal).toISOString() : null
+      publishMode === 'schedule' && scheduledLocal ? localInputToIso(scheduledLocal) : null
     startSaving(async () => {
       const result = isEditing
         ? await updateRecipe(init.recipeId, form, publishMode, scheduledIso)

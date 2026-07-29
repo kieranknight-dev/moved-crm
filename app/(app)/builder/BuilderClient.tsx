@@ -18,6 +18,7 @@ import {
   liveSummaryText,
   estimatedDuration,
   effectiveDuration,
+  localInputToIso,
   formatRowDuration,
   repeatCountFor,
   UNIT_STEPPER,
@@ -221,12 +222,10 @@ export default function BuilderClient({
   // --- save ---
   const onSave = () => {
     setError(null)
-    // Convert the local datetime-local value to an absolute ISO timestamp here,
-    // where the admin's timezone is known — the server must not re-interpret it.
+    // Scheduling is always Sydney wall-clock time (AEST/AEDT), not whatever
+    // timezone the admin's browser/device happens to be set to.
     const scheduledIso =
-      publishMode === 'schedule' && scheduledLocal
-        ? new Date(scheduledLocal).toISOString()
-        : null
+      publishMode === 'schedule' && scheduledLocal ? localInputToIso(scheduledLocal) : null
     startSaving(async () => {
       const result = init
         ? await updateCoachWorkout(init.workoutId, state, publishMode, scheduledIso)
