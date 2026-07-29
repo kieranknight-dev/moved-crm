@@ -18,13 +18,14 @@ export default async function BuilderPage({
   const supabase = createClient()
   const { data, error } = await supabase
     .from('exercises')
-    .select('name, category, body_part')
+    .select('name, category, body_part, equipment_required')
     .order('name')
 
   const exercises: PickerExercise[] = (data ?? []).map((e) => ({
     name: e.name,
     category: e.category as ExerciseCategory,
     bodyPart: e.body_part as ExerciseBodyPart | null,
+    equipment: e.equipment_required ?? [],
   }))
 
   if (error) {

@@ -20,24 +20,33 @@ export type Database = {
           category: string
           created_at: string
           equipment_required: string[]
+          gif_url: string | null
           id: string
           name: string
+          tracks_calories: boolean
+          tracks_distance: boolean
         }
         Insert: {
           body_part?: string | null
           category: string
           created_at?: string
           equipment_required?: string[]
+          gif_url?: string | null
           id?: string
           name: string
+          tracks_calories?: boolean
+          tracks_distance?: boolean
         }
         Update: {
           body_part?: string | null
           category?: string
           created_at?: string
           equipment_required?: string[]
+          gif_url?: string | null
           id?: string
           name?: string
+          tracks_calories?: boolean
+          tracks_distance?: boolean
         }
         Relationships: []
       }
@@ -79,6 +88,66 @@ export type Database = {
           },
         ]
       }
+      notification_events: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          related_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          related_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          related_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      notification_reads: {
+        Row: {
+          notification_event_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          notification_event_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          notification_event_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_reads_notification_event_id_fkey"
+            columns: ["notification_event_id"]
+            isOneToOne: false
+            referencedRelation: "notification_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -87,6 +156,8 @@ export type Database = {
           email: string | null
           id: string
           is_pro: boolean
+          notify_recipes: boolean
+          notify_workouts: boolean
         }
         Insert: {
           avatar_url?: string | null
@@ -95,6 +166,8 @@ export type Database = {
           email?: string | null
           id: string
           is_pro?: boolean
+          notify_recipes?: boolean
+          notify_workouts?: boolean
         }
         Update: {
           avatar_url?: string | null
@@ -103,6 +176,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_pro?: boolean
+          notify_recipes?: boolean
+          notify_workouts?: boolean
         }
         Relationships: []
       }
@@ -159,6 +234,39 @@ export type Database = {
           steps?: Json
         }
         Relationships: []
+      }
+      saved_recipes: {
+        Row: {
+          created_at: string
+          recipe_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          recipe_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          recipe_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_recipes_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_recipes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_workouts: {
         Row: {

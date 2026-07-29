@@ -11,6 +11,13 @@ import {
   type BuilderState,
   type PublishMode,
 } from '@/lib/builder'
+import {
+  EXERCISE_CATEGORY_VALUES,
+  EXERCISE_BODY_PART_VALUES,
+  type ExerciseCategory,
+  type ExerciseBodyPart,
+} from '@/lib/types'
+import type { PickerExercise } from './ExercisePicker'
 
 export type SaveResult = { ok: true } | { ok: false; error: string }
 
@@ -98,4 +105,66 @@ export async function updateCoachWorkout(
 
   revalidatePath('/library')
   return { ok: true }
+}
+
+export type CreateExerciseResult =
+  | { ok: true; exercise: PickerExercise }
+  | { ok: false; error: string }
+
+// Inline "exercise not found, add it" escape hatch in the builder's picker.
+// Writes a real row to the shared exercises table (service role, same admin
+// gate as the workout writes above) so it is genuinely in the library for
+// every future search, not a one-off attached to just this workout.
+export async function createExercise(input: {
+  name: string
+  category: ExerciseCategory
+  bodyPart: ExerciseBodyPart | null
+  equipment: string[]
+  tracksDistance: boolean
+  tracksCalories: boolean
+  gifUrl: string | null
+}): Promise<CreateExerciseResult> {
+  const name = input.name.trim()
+  if (!name) return { ok: false, error: 'Give the exercise a name.' }
+  if (!EXERCISE_CATEGORY_VALUES.includes(input.category)) {
+    return { ok: false, error: 'Pick a category.' }
+  }
+  if (input.bodyPart != null && !EXERCISE_BODY_PART_VALUES.includes(input.bodyPart)) {
+    return { ok: false, error: 'Pick a body part.' }
+  }
+
+  const guard = await requireAdminClient()
+  if ('error' in guard) return { ok: false, error: guard.error }
+
+  const { data, error } = await guard.admin
+    .from('exercises')
+    .insert({
+      name,
+      category: input.category,
+      body_part: input.bodyPart,
+      equipment_required: input.equipment,
+      tracks_distance: input.tracksDistance,
+      tracks_calories: input.tracksCalories,
+      gif_url: input.gifUrl,
+    })
+    .select('name, category, body_part, equipment_required')
+    .single()
+
+  if (error) {
+    if (error.code === '23505') {
+      return { ok: false, error: `“${name}” is already in the library.` }
+    }
+    return { ok: false, error: error.message }
+  }
+
+  revalidatePath('/builder')
+  return {
+    ok: true,
+    exercise: {
+      name: data.name,
+      category: data.category as ExerciseCategory,
+      bodyPart: data.body_part as ExerciseBodyPart | null,
+      equipment: data.equipment_required ?? [],
+    },
+  }
 }

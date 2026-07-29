@@ -72,6 +72,7 @@ export interface RecipeFormInput {
 }
 export type WorkoutUpdate = Database['public']['Tables']['workouts']['Update']
 export type ExerciseRow = Database['public']['Tables']['exercises']['Row']
+export type ExerciseInsert = Database['public']['Tables']['exercises']['Insert']
 
 // Swift: WorkoutFormat
 export type WorkoutFormat =
@@ -123,6 +124,29 @@ export type ExerciseBodyPart =
   | 'Abs'
   | 'Cardio'
   | 'Full Body'
+
+// Every value the exercises_category_check CHECK constraint allows — used to
+// validate a new exercise server-side (the create form only offers values
+// already present in the data, but the DB permits the full set).
+export const EXERCISE_CATEGORY_VALUES: ExerciseCategory[] = [
+  'Bodyweight',
+  'Dumbbell',
+  'Barbell',
+  'Kettlebell',
+  'Resistance Band',
+  'Cardio',
+  'Machine',
+  'Other',
+]
+
+// Every value the exercises_body_part_check CHECK constraint allows.
+export const EXERCISE_BODY_PART_VALUES: ExerciseBodyPart[] = [
+  'Upper Body',
+  'Lower Body',
+  'Abs',
+  'Cardio',
+  'Full Body',
+]
 
 // One element of the workouts.exercises JSONB array — mirrors the Swift
 // `Exercise` struct's CodingKeys exactly.

@@ -70,13 +70,16 @@ export interface BuilderInit {
 }
 
 export default function BuilderClient({
-  exercises,
+  exercises: initialExercises,
   init,
 }: {
   exercises: PickerExercise[]
   init?: BuilderInit
 }) {
   const router = useRouter()
+  // Local copy so a brand-new exercise created inline via the picker's "add
+  // it" escape hatch is searchable immediately, without a full page refetch.
+  const [exercises, setExercises] = useState<PickerExercise[]>(initialExercises)
   const [state, setState] = useState<BuilderState>(init?.state ?? initialBuilderState)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -347,6 +350,7 @@ export default function BuilderClient({
           exercises={exercises}
           onSelect={onPickerSelect}
           onClose={() => setPicker({ open: false, targetRound: null, editingId: null })}
+          onExerciseCreated={(ex) => setExercises((prev) => [...prev, ex])}
         />
       )}
     </div>

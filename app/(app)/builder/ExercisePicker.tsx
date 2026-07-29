@@ -1,32 +1,22 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import type { ExerciseBodyPart, ExerciseCategory } from '@/lib/types'
+import { useMemo, useState, type ReactNode } from 'react'
+import {
+  EXERCISE_CATEGORY_VALUES,
+  EXERCISE_BODY_PART_VALUES,
+  type ExerciseBodyPart,
+  type ExerciseCategory,
+} from '@/lib/types'
+import { createExercise } from './actions'
 
 export interface PickerExercise {
   name: string
   category: ExerciseCategory
   bodyPart: ExerciseBodyPart | null
+  // Internal-only (Gigi/equipment tagging) — never shown in the browse list
+  // or used as a filter, only surfaced in the "add new exercise" form below.
+  equipment: string[]
 }
-
-const CATEGORY_ORDER: ExerciseCategory[] = [
-  'Bodyweight',
-  'Dumbbell',
-  'Barbell',
-  'Kettlebell',
-  'Resistance Band',
-  'Cardio',
-  'Machine',
-  'Other',
-]
-
-const BODY_PART_ORDER: ExerciseBodyPart[] = [
-  'Upper Body',
-  'Lower Body',
-  'Abs',
-  'Cardio',
-  'Full Body',
-]
 
 type ViewMode = 'all' | 'category' | 'bodyPart'
 
@@ -38,33 +28,41 @@ const VIEW_MODES: { mode: ViewMode; label: string }[] = [
 
 // Modal for choosing an exercise name. Mirrors the iOS ExercisePickerView:
 // view-mode switch (All / Category / Body Part) + search with prefix-matches
-// ranked above contains-matches (both alphabetical), plus a "Use '<query>'"
-// row for custom names. equipment_required is internal-only (Gigi/equipment
-// tagging) and is never surfaced here.
+// ranked above contains-matches (both alphabetical). When a search comes up
+// empty, offers a one-off custom name AND a proper "add to the library" form
+// (NewExerciseModal below) so a missing exercise never becomes a dead end.
 export function ExercisePicker({
   exercises,
   onSelect,
   onClose,
+  onExerciseCreated,
 }: {
   exercises: PickerExercise[]
   onSelect: (name: string) => void
   onClose: () => void
+  onExerciseCreated: (exercise: PickerExercise) => void
 }) {
   const [query, setQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('all')
   const [category, setCategory] = useState<ExerciseCategory | null>(null)
   const [bodyPart, setBodyPart] = useState<ExerciseBodyPart | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
   const trimmed = query.trim()
 
   const categories = useMemo(
-    () => CATEGORY_ORDER.filter((c) => exercises.some((e) => e.category === c)),
+    () => EXERCISE_CATEGORY_VALUES.filter((c) => exercises.some((e) => e.category === c)),
     [exercises]
   )
   const bodyParts = useMemo(
-    () => BODY_PART_ORDER.filter((b) => exercises.some((e) => e.bodyPart === b)),
+    () => EXERCISE_BODY_PART_VALUES.filter((b) => exercises.some((e) => e.bodyPart === b)),
     [exercises]
   )
+  const equipmentOptions = useMemo(() => {
+    const set = new Set<string>()
+    for (const e of exercises) for (const eq of e.equipment) set.add(eq)
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+  }, [exercises])
 
   const sortAsc = (a: PickerExercise, b: PickerExercise) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
@@ -111,12 +109,18 @@ export function ExercisePicker({
     ? sections.reduce((n, s) => n + s.items.length, 0)
     : flatResults.length
 
-  const showCustomRow = trimmed.length > 0 && totalShown === 0
+  const showEmptyState = trimmed.length > 0 && totalShown === 0
 
   const changeMode = (mode: ViewMode) => {
     setViewMode(mode)
     setCategory(null)
     setBodyPart(null)
+  }
+
+  const handleCreated = (exercise: PickerExercise) => {
+    onExerciseCreated(exercise)
+    setShowCreate(false)
+    onSelect(exercise.name)
   }
 
   return (
@@ -196,14 +200,23 @@ export function ExercisePicker({
         </div>
 
         <ul className="flex-1 overflow-y-auto px-5 pb-5">
-          {showCustomRow && (
-            <li>
+          {showEmptyState && (
+            <li className="py-6 text-center border-b border-blush-50">
+              <p className="text-sm text-ink-900 font-medium">Exercise not found. Add it?</p>
+              <p className="text-xs text-ink-500 mt-1">
+                Save “{trimmed}” to the exercise library so it is there next time too.
+              </p>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="mt-3 rounded-pill bg-blush-500 text-white px-4 py-2 text-sm font-medium shadow-cta hover:shadow-cardHover transition-shadow"
+              >
+                Add “{trimmed}” to the library
+              </button>
               <button
                 onClick={() => onSelect(trimmed)}
-                className="w-full flex items-center gap-2 py-3 text-left text-blush-600 font-medium"
+                className="block w-full mt-3 text-xs text-ink-500 hover:text-blush-600 transition-colors"
               >
-                <span className="text-blush-500">＋</span>
-                Use “{trimmed}”
+                Or use “{trimmed}” for this workout only
               </button>
             </li>
           )}
@@ -225,13 +238,24 @@ export function ExercisePicker({
                 <ExerciseRow key={e.name} exercise={e} onSelect={onSelect} />
               ))}
 
-          {totalShown === 0 && !showCustomRow && (
+          {totalShown === 0 && !showEmptyState && (
             <li className="py-8 text-center text-sm text-ink-500">
               Type to search {exercises.length.toLocaleString()} exercises.
             </li>
           )}
         </ul>
       </div>
+
+      {showCreate && (
+        <NewExerciseModal
+          initialName={trimmed}
+          categories={categories.length > 0 ? categories : EXERCISE_CATEGORY_VALUES}
+          bodyParts={bodyParts.length > 0 ? bodyParts : EXERCISE_BODY_PART_VALUES}
+          equipmentOptions={equipmentOptions}
+          onClose={() => setShowCreate(false)}
+          onCreated={handleCreated}
+        />
+      )}
     </div>
   )
 }
@@ -275,4 +299,200 @@ function CategoryPill({
       {label}
     </button>
   )
+}
+
+// ---------------------------------------------------------------------------
+// New exercise form — the inline escape hatch itself. Category/body part/
+// equipment are all dropdowns or chip toggles sourced from the real distinct
+// values already in the table (passed in from ExercisePicker), never free
+// text, so this can't produce near-duplicate values like "Dumbbell" vs
+// "Dumbbells".
+// ---------------------------------------------------------------------------
+
+function NewExerciseModal({
+  initialName,
+  categories,
+  bodyParts,
+  equipmentOptions,
+  onClose,
+  onCreated,
+}: {
+  initialName: string
+  categories: ExerciseCategory[]
+  bodyParts: ExerciseBodyPart[]
+  equipmentOptions: string[]
+  onClose: () => void
+  onCreated: (exercise: PickerExercise) => void
+}) {
+  const [name, setName] = useState(initialName)
+  const [category, setCategory] = useState<ExerciseCategory>(categories[0])
+  const [bodyPart, setBodyPart] = useState<ExerciseBodyPart | ''>('')
+  const [equipment, setEquipment] = useState<string[]>([])
+  const [tracksDistance, setTracksDistance] = useState(false)
+  const [tracksCalories, setTracksCalories] = useState(false)
+  const [gifUrl, setGifUrl] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const toggleEquipment = (eq: string) =>
+    setEquipment((prev) => (prev.includes(eq) ? prev.filter((e) => e !== eq) : [...prev, eq]))
+
+  const onSave = async () => {
+    if (!name.trim()) {
+      setError('Give the exercise a name.')
+      return
+    }
+    setError(null)
+    setSaving(true)
+    const result = await createExercise({
+      name,
+      category,
+      bodyPart: bodyPart || null,
+      equipment,
+      tracksDistance,
+      tracksCalories,
+      gifUrl: gifUrl.trim() || null,
+    })
+    setSaving(false)
+    if (!result.ok) {
+      setError(result.error)
+      return
+    }
+    onCreated(result.exercise)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-ink-900/40 p-0 sm:p-6"
+      onClick={onClose}
+    >
+      <div
+        className="w-full sm:max-w-sm bg-white rounded-t-cardLg sm:rounded-cardLg shadow-cardLg max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-5 pb-3">
+          <span className="w-8" />
+          <h2 className="font-display text-base text-ink-900">Add exercise</h2>
+          <button
+            onClick={onClose}
+            className="h-8 w-8 grid place-items-center rounded-pill bg-blush-50 text-ink-900 hover:bg-blush-100 transition-colors"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4">
+          <div>
+            <FieldLabel>Name</FieldLabel>
+            <input
+              type="text"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Exercise name"
+              className="w-full rounded-card bg-blush-50 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-blush-300"
+            />
+          </div>
+
+          <div>
+            <FieldLabel>Category</FieldLabel>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as ExerciseCategory)}
+              className="w-full rounded-card bg-blush-50 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-blush-300"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <FieldLabel>Body part</FieldLabel>
+            <select
+              value={bodyPart}
+              onChange={(e) => setBodyPart(e.target.value as ExerciseBodyPart | '')}
+              className="w-full rounded-card bg-blush-50 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-blush-300"
+            >
+              <option value="">None</option>
+              {bodyParts.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {equipmentOptions.length > 0 && (
+            <div>
+              <FieldLabel>Equipment required</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {equipmentOptions.map((eq) => (
+                  <CategoryPill
+                    key={eq}
+                    label={eq}
+                    active={equipment.includes(eq)}
+                    onClick={() => toggleEquipment(eq)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-5">
+            <label className="flex items-center gap-2 text-sm text-ink-900">
+              <input
+                type="checkbox"
+                checked={tracksDistance}
+                onChange={(e) => setTracksDistance(e.target.checked)}
+                className="h-4 w-4 rounded accent-blush-500"
+              />
+              Tracks distance
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ink-900">
+              <input
+                type="checkbox"
+                checked={tracksCalories}
+                onChange={(e) => setTracksCalories(e.target.checked)}
+                className="h-4 w-4 rounded accent-blush-500"
+              />
+              Tracks calories
+            </label>
+          </div>
+
+          <div>
+            <FieldLabel>GIF URL (optional)</FieldLabel>
+            <input
+              type="text"
+              value={gifUrl}
+              onChange={(e) => setGifUrl(e.target.value)}
+              placeholder="https://..."
+              className="w-full rounded-card bg-blush-50 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-blush-300"
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-blush-700 bg-blush-50 border border-blush-100 rounded-card px-4 py-3">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="w-full rounded-pill bg-blush-500 text-white py-3.5 text-sm font-medium shadow-cta hover:shadow-cardHover transition-shadow disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Add to library and use it'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FieldLabel({ children }: { children: ReactNode }) {
+  return <p className="text-xs font-medium text-ink-500 mb-1.5">{children}</p>
 }
