@@ -141,7 +141,6 @@ export const FORMAT_DESCRIPTION: Record<WorkoutFormat, string> = {
 }
 
 export const REST_CHIP_VALUES = [0, 30, 60, 120]
-export const CAP_CHIP_VALUES = [8, 10, 12, 15, 20]
 export const FOR_TIME_CAP_CHIP_VALUES = [8, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 
 export const CATEGORIES: WorkoutCategory[] = [

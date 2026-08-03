@@ -9,7 +9,6 @@ import {
   FORMAT_CHIP_LABEL,
   FORMAT_DESCRIPTION,
   REST_CHIP_VALUES,
-  CAP_CHIP_VALUES,
   FOR_TIME_CAP_CHIP_VALUES,
   CATEGORIES,
   DIFFICULTIES,
@@ -416,13 +415,7 @@ function FormatSettings({
     return (
       <SettingCard>
         <Label>Time cap</Label>
-        <ChipRow
-          values={CAP_CHIP_VALUES}
-          selected={state.amrapCapMinutes}
-          label={(v) => `${v}`}
-          suffix="min"
-          onSelect={(v) => set('amrapCapMinutes', v)}
-        />
+        <Stepper value={state.amrapCapMinutes} min={1} max={60} onChange={(v) => set('amrapCapMinutes', v)} />
       </SettingCard>
     )
   }
