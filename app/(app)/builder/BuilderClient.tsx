@@ -175,7 +175,7 @@ export default function BuilderClient({
     // Build the exercise once, outside the updater — a setState updater must be
     // pure, and crypto.randomUUID() inside one runs twice under StrictMode,
     // desyncing the committed id from expandedId.
-    const ex = { ...newBuilderExercise(roundIndex), name }
+    const ex = { ...newBuilderExercise(roundIndex, state.format), name }
     setState((s) => ({ ...s, exercises: [...s.exercises, ex] }))
     setExpandedId(ex.id)
   }
@@ -714,8 +714,11 @@ function ExerciseEditCard({
   openPickerToRename: (id: string) => void
   onDone: () => void
 }) {
+  // Tabata stations stay timed-only — no Reps|Time choice, unlike every
+  // other format. Per-exercise work/rest durations are still fully
+  // editable (see BigStepper/SmallStepper below); only the reps-vs-time
+  // mode itself is locked.
   const isTimed = state.format === 'Tabata' ? true : ex.isTimed
-  const disabledBig = state.format === 'Tabata'
 
   return (
     <div className="rounded-card bg-surface-warm p-4 space-y-4">
@@ -768,7 +771,6 @@ function ExerciseEditCard({
         value={isTimed ? ex.seconds : ex.reps}
         label={isTimed ? 'Time' : UNIT_STEPPER[ex.unit].label}
         display={isTimed ? formatRowDuration(ex.seconds) : `${ex.reps}`}
-        disabled={disabledBig}
         onChange={(v) => patchExercise(ex.id, isTimed ? { seconds: v } : { reps: v })}
         min={isTimed ? 5 : UNIT_STEPPER[ex.unit].min}
         max={isTimed ? 600 : UNIT_STEPPER[ex.unit].max}
@@ -795,6 +797,18 @@ function ExerciseEditCard({
             onChange={(v) => patchExercise(ex.id, { restSeconds: v })}
           />
         </div>
+      )}
+
+      {state.format === 'Tabata' && (
+        <SmallStepper
+          label="Rest after this station"
+          value={ex.restSeconds}
+          min={0}
+          max={60}
+          step={5}
+          display={formatRowDuration(ex.restSeconds)}
+          onChange={(v) => patchExercise(ex.id, { restSeconds: v })}
+        />
       )}
 
       <button

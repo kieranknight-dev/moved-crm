@@ -158,18 +158,23 @@ export type StructuredExerciseUnit = 'reps' | 'seconds' | 'calories' | 'distance
 export interface WorkoutExercise {
   id: string // UUID
   name: string
-  // Circuit: deprecated once callers read value/unit/rest_seconds instead —
-  // still written (derived from those fields, not hand-formatted) so legacy
-  // readers and the required Swift `detail` field keep decoding. Other
-  // formats still treat this as their source of truth for now.
+  // Circuit/EMOM/AMRAP/Tabata: deprecated once callers read value/unit/
+  // rest_seconds instead — still written (derived from those fields, not
+  // hand-formatted) so legacy readers and the required Swift `detail` field
+  // keep decoding. Other formats still treat this as their source of truth.
   detail: string // display string: "12 reps", "45 sec", "10 reps each side"
-  // Circuit only (2026-07-23 migration: 20260723090000_circuit_structured_values.sql).
+  // Circuit/EMOM/AMRAP/Tabata (2026-07-23 migration:
+  // 20260723090000_circuit_structured_values.sql, since extended to the
+  // other three formats' per-exercise work value).
   value?: number | null
   unit?: StructuredExerciseUnit | null
-  rest_seconds?: number | null // per-exercise rest; null = none authored
+  rest_seconds?: number | null // per-exercise rest; null = none authored — currently unused by any format (see rest_after_sets_seconds)
   sets?: number | null // Strength only; null falls back to workout.rounds
-  rest_after_sets_seconds?: number | null // Strength only; null falls back to 45
-  round_index?: number | null // Circuit/Tabata custom-rounds tag, 1-based; null = same-every-round
+  // Strength: rest after this many sets, null falls back to 45. Tabata
+  // reuses the same column for rest after this station, null falls back to
+  // 10 — same underlying field, different per-format meaning (see buildInsert).
+  rest_after_sets_seconds?: number | null
+  round_index?: number | null // Circuit/Tabata/EMOM/AMRAP custom-rounds tag, 1-based; null = same-every-round
 }
 
 // workouts row with the string/JSONB columns narrowed to their domain types.

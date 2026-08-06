@@ -163,7 +163,25 @@ export const DIFFICULTIES: WorkoutDifficulty[] = [
 // Factories
 // ---------------------------------------------------------------------------
 
-export function newBuilderExercise(roundIndex: number | null = null): BuilderExercise {
+export function newBuilderExercise(
+  roundIndex: number | null = null,
+  format?: WorkoutFormat
+): BuilderExercise {
+  // Tabata stations default to the traditional 20s work / 10s rest split —
+  // user-adjustable from there via the per-exercise work/rest controls.
+  if (format === 'Tabata') {
+    return {
+      id: crypto.randomUUID(),
+      name: '',
+      isTimed: true,
+      reps: 10,
+      seconds: 20,
+      unit: 'reps',
+      sets: 3,
+      restSeconds: 10,
+      roundIndex,
+    }
+  }
   return {
     id: crypto.randomUUID(),
     name: '',
@@ -237,6 +255,18 @@ function workSeconds(ex: BuilderExercise): number {
   return ex.isTimed ? ex.seconds : ex.reps * 3
 }
 
+// Tabata round duration: each station's work + its own rest, except the
+// last station in the round — its trailing rest is dropped, since
+// restBetweenRoundsSeconds (or the next round's own stations) takes over
+// from there. Mirrors the old hardcoded `perRound * 30 - 10` (20+10 per
+// station, minus one trailing rest), generalized to each exercise's own
+// configured seconds/restSeconds instead of the fixed 20/10.
+function tabataRoundSeconds(exs: BuilderExercise[]): number {
+  if (exs.length === 0) return 0
+  const total = exs.reduce((s, ex) => s + workSeconds(ex) + ex.restSeconds, 0)
+  return total - exs[exs.length - 1].restSeconds
+}
+
 function maxRoundIndex(exercises: BuilderExercise[]): number {
   return exercises.reduce((m, ex) => Math.max(m, ex.roundIndex ?? 0), 0)
 }
@@ -267,8 +297,6 @@ function repsQuantityText(ex: BuilderExercise): string {
 
 export function quantityPillText(state: BuilderState, ex: BuilderExercise): string {
   switch (state.format) {
-    case 'Tabata':
-      return '0:20'
     case 'Rounds': {
       const qty = ex.isTimed ? formatRowDuration(ex.seconds) : repsQuantityText(ex)
       return `${ex.sets} × ${qty}`
@@ -307,17 +335,16 @@ export function estimatedDuration(state: BuilderState): number {
         const authored = Math.max(1, maxRoundIndex(exercises))
         let stationSeconds = 0
         for (let r = 1; r <= authored; r++) {
-          const perRound = exercises.filter((ex) => ex.roundIndex === r).length
-          if (perRound > 0) stationSeconds += (perRound * 30 - 10) * repeatCountFor(state, r)
+          const roundExercises = exercises.filter((ex) => ex.roundIndex === r)
+          stationSeconds += tabataRoundSeconds(roundExercises) * repeatCountFor(state, r)
         }
         const physical = physicalRoundCount(state)
         const total = stationSeconds + Math.max(0, physical - 1) * state.restBetweenRoundsSeconds
         return Math.max(1, Math.floor(total / 60))
       }
       const roundCount = state.rounds
-      const perRound = exercises.length
-      if (perRound <= 0) return 1
-      const perRoundSeconds = perRound * 30 - 10
+      const perRoundSeconds = tabataRoundSeconds(exercises)
+      if (perRoundSeconds <= 0) return 1
       const total =
         roundCount * perRoundSeconds + Math.max(0, roundCount - 1) * state.restBetweenRoundsSeconds
       return Math.max(1, Math.floor(total / 60))
@@ -396,18 +423,15 @@ function unitDetailText(ex: BuilderExercise): string {
   }
 }
 
-function detailText(state: BuilderState, ex: BuilderExercise): string {
-  switch (state.format) {
-    case 'Tabata':
-      return '20 sec'
-    default:
-      // Circuit used to force every station onto a ~3s/rep seconds conversion
-      // here (workSeconds), discarding the authored reps/cal/distance value —
-      // that mismatch is exactly the bug the structured value/unit/rest_seconds
-      // fields (see toPayload below) fix. detail is now always a faithful
-      // projection of the actual authored value, same as every other format.
-      return ex.isTimed ? `${ex.seconds} sec` : unitDetailText(ex)
-  }
+function detailText(ex: BuilderExercise): string {
+  // Circuit used to force every station onto a ~3s/rep seconds conversion
+  // here (workSeconds), discarding the authored reps/cal/distance value —
+  // that mismatch is exactly the bug the structured value/unit/rest_seconds
+  // fields (see toPayload below) fix. Tabata used to hardcode '20 sec'
+  // unconditionally, ignoring the exercise entirely — same fix. detail is
+  // now always a faithful projection of the actual authored value, same as
+  // every other format.
+  return ex.isTimed ? `${ex.seconds} sec` : unitDetailText(ex)
 }
 
 // Structured value for a Circuit exercise — the source of truth going
@@ -459,17 +483,26 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
     const payload: WorkoutExercisePayload = {
       id: ex.id,
       name: ex.name.trim(),
-      detail: detailText(state, ex),
+      detail: detailText(ex),
     }
     if (state.format === 'Rounds') {
       payload.sets = ex.sets
+    }
+    if (state.format === 'Rounds' || state.format === 'Tabata') {
+      // Same underlying column both formats read/write — Rounds calls it
+      // "rest after this many sets", Tabata "rest after this station".
+      // Reusing it (rather than the separate, currently-unused rest_seconds
+      // field) matches the iOS app, which writes to the same column for both.
       payload.rest_after_sets_seconds = ex.restSeconds
     }
-    if (state.format === 'Circuit' || state.format === 'EMOM' || state.format === 'AMRAP') {
+    if (
+      state.format === 'Circuit' ||
+      state.format === 'EMOM' ||
+      state.format === 'AMRAP' ||
+      state.format === 'Tabata'
+    ) {
       // Structured fields are the source of truth going forward (detail
       // above is only a derived projection for legacy/back-compat readers).
-      // No per-exercise rest input exists in the builder yet, so rest_seconds
-      // stays unset — a future feature's natural home.
       const sv = structuredValue(ex)
       payload.value = sv.value
       payload.unit = sv.unit
@@ -607,11 +640,16 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
   const isCustomRounds = isRoundsFmt && raw.some((e) => typeof e?.round_index === 'number')
 
   const rawExercises: BuilderExercise[] = raw.map((e) => {
-    // Circuit/EMOM/AMRAP: prefer the structured fields (source of truth) over
-    // reparsing detail text — falls back to detail-parsing only for rows
-    // saved before the structured value/unit fields existed.
+    // Circuit/EMOM/AMRAP/Tabata: prefer the structured fields (source of
+    // truth) over reparsing detail text — falls back to detail-parsing only
+    // for rows saved before the structured value/unit fields existed for
+    // that format. Legacy Tabata rows predate this entirely (detail was
+    // hardcoded to the literal "20 sec" for every station), so they fall
+    // through to parseDetail() below, which recovers isTimed:true, seconds:20
+    // from that literal — the same values the old hardcoded force used to
+    // produce, just via the generic path instead of a format special-case.
     const structured =
-      (format === 'Circuit' || format === 'EMOM' || format === 'AMRAP') &&
+      (format === 'Circuit' || format === 'EMOM' || format === 'AMRAP' || format === 'Tabata') &&
       typeof e?.value === 'number' &&
       typeof e?.unit === 'string'
         ? (e.unit === 'seconds'
@@ -625,12 +663,21 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
       // duplicate React keys once reopened in the builder.
       id: crypto.randomUUID(),
       name: String(e?.name ?? ''),
-      isTimed: format === 'Tabata' ? true : d.isTimed,
+      isTimed: d.isTimed,
       reps: d.reps,
-      seconds: format === 'Tabata' ? 20 : d.seconds,
+      seconds: d.seconds,
       unit: d.unit,
       sets: typeof e?.sets === 'number' ? e.sets : 3,
-      restSeconds: typeof e?.rest_after_sets_seconds === 'number' ? e.rest_after_sets_seconds : 45,
+      // rest_after_sets_seconds was never written for Tabata before this
+      // change (it was Rounds-only), so a legacy Tabata row has no value
+      // here — fall back to the format's own historical implicit rest
+      // (10s) rather than Rounds' 45s default.
+      restSeconds:
+        typeof e?.rest_after_sets_seconds === 'number'
+          ? e.rest_after_sets_seconds
+          : format === 'Tabata'
+            ? 10
+            : 45,
       roundIndex: typeof e?.round_index === 'number' ? e.round_index : null,
     }
   })
