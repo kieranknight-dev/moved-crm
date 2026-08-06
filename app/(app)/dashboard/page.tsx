@@ -16,7 +16,8 @@ import {
   ClockIcon,
   SparkIcon,
 } from '@/components/dashboard'
-import type { WorkoutFormat, WorkoutCategory, WorkoutSource } from '@/lib/types'
+import type { WorkoutCategory, WorkoutSource } from '@/lib/types'
+import type { DashboardWorkoutFormat } from '@/lib/dashboard'
 
 // Always render fresh — these are live counts, not build-time data.
 export const dynamic = 'force-dynamic'
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
 
   const { users, workouts, sessions, gigiUsage, growth } = stats
 
-  const formatSegments = (Object.keys(FORMAT_ACCENTS) as WorkoutFormat[])
+  const formatSegments = (Object.keys(FORMAT_ACCENTS) as DashboardWorkoutFormat[])
     .map((f) => ({ label: f, value: workouts.byFormat[f], color: FORMAT_ACCENTS[f] }))
     .sort((a, b) => b.value - a.value)
 

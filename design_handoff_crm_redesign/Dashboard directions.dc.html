@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #EFEBE7; font-family: 'Space Grotesk', system-ui, sans-serif; color: #1A1714; -webkit-font-smoothing: antialiased; }
+  a { color: #C9587E; text-decoration: none; }
+  a:hover { color: #B04468; }
+  table { border-collapse: collapse; }
+</style>
+</helmet>
+
+<section style="padding: 56px 56px 96px; display: flex; flex-direction: column; gap: 32px">
+
+  <div style="max-width: 780px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #A89E96">Turn 1 · MOVED CRM</div>
+    <h1 style="font-family: 'Archivo', sans-serif; font-size: 40px; font-weight: 800; letter-spacing: -0.02em; margin: 0; line-height: 1.1">Three dashboard directions</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #6F665E; text-wrap: pretty">Every number below is live from your Supabase, pulled today. Same colour system across all three — blush pulled back to CTAs, active states and one chart series; surfaces moved to warm neutrals so the cards carry themselves on shadow instead of pink borders. Pick a direction with <a href="#1a">1a</a>, <a href="#1b">1b</a> or <a href="#1c">1c</a> and I'll roll it across Workouts, New Workout, Recipes and New Recipe.</p>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start">
+
+    <!-- ============================== 1a ============================== -->
+    <div id="1a" style="display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <span style="font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .08em; background: #1A1714; color: #fff; padding: 5px 10px; border-radius: 6px">1a</span>
+        <span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700">Content health</span>
+        <span style="font-size: 14px; color: #8A827A">Leads with what's live and what's missing</span>
+      </div>
+
+      <div style="width: 1360px; background: #FAF8F6; border-radius: 20px; overflow: hidden; box-shadow: 0 24px 60px rgba(20,15,10,.12); display: flex; min-height: 1180px">
+
+        <!-- sidebar -->
+        <aside style="width: 232px; flex-shrink: 0; background: #FFFFFF; border-right: 1px solid #F1ECE6; padding: 28px 20px; display: flex; flex-direction: column">
+          <div style="font-family: 'Archivo', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: -0.02em; padding: 0 12px; margin-bottom: 32px">MOVED<span style="color: #E58AA1">.</span></div>
+          <nav style="display: flex; flex-direction: column; gap: 4px; font-size: 14.5px">
+            <a href="#1a" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; background: #FBECF0; color: #C9587E; font-weight: 600">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              Dashboard
+            </a>
+            <a href="#1a" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M3 8v8M6 5v14M18 5v14M21 8v8"/></svg>
+              Workouts
+            </a>
+            <a href="#1a" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Workout
+            </a>
+            <a href="#1a" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10a4 4 0 0 1 0 8H4zM4 12h12a4 4 0 0 1 0 8H4z"/></svg>
+              Recipes
+            </a>
+            <a href="#1a" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Recipe
+            </a>
+          </nav>
+          <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #F1ECE6; display: flex; flex-direction: column; gap: 8px">
+            <div style="font-size: 12px; color: #A89E96; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">kieran@moved.app</div>
+            <button style="text-align: left; background: none; border: none; padding: 0; font-family: inherit; font-size: 13.5px; color: #8A827A; cursor: pointer">Sign out</button>
+          </div>
+        </aside>
+
+        <!-- main -->
+        <main style="flex: 1; padding: 36px 40px 48px; display: flex; flex-direction: column; gap: 24px; min-width: 0">
+
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h2 style="font-family: 'Archivo', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0">Dashboard</h2>
+              <p style="margin: 0; font-size: 14px; color: #8A827A">Live from Supabase · 6 Aug 2026, 11:22am</p>
+            </div>
+            <div style="display: flex; gap: 10px">
+              <button style="font-family: inherit; font-size: 13.5px; font-weight: 500; color: #6F665E; background: #fff; border: 1px solid #F0E8E2; border-radius: 999px; padding: 10px 18px; cursor: pointer; box-shadow: 0 2px 8px rgba(20,15,10,.05)">Last 30 days</button>
+              <button style="font-family: inherit; font-size: 13.5px; font-weight: 600; color: #fff; background: #E58AA1; border: none; border-radius: 999px; padding: 10px 20px; cursor: pointer; box-shadow: 0 8px 20px rgba(229,138,161,.35)">+ New workout</button>
+            </div>
+          </div>
+
+          <!-- KPI row -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px">
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 20px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; align-items: center; justify-content: space-between">
+                <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: #FBECF0; color: #C9587E">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h8l6 6v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 4v6h6"/></svg>
+                </span>
+                <span style="font-size: 11.5px; font-weight: 600; color: #5F8D72; background: #EEF4F0; padding: 4px 9px; border-radius: 999px">+5 this week</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <div style="font-family: 'Archivo', sans-serif; font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">160</div>
+                <div style="font-size: 13px; color: #8A827A">Items live in the app</div>
+              </div>
+              <div style="display: flex; gap: 14px; font-size: 12px; color: #8A827A; padding-top: 12px; border-top: 1px solid #F5F1ED">
+                <span><b style="color: #1A1714; font-weight: 600">34</b> workouts</span>
+                <span><b style="color: #1A1714; font-weight: 600">126</b> recipes</span>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 20px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; align-items: center; justify-content: space-between">
+                <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: #F4F1ED; color: #6F665E">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                </span>
+                <span style="font-size: 11.5px; font-weight: 600; color: #8A827A; background: #F4F1ED; padding: 4px 9px; border-radius: 999px">0 this week</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <div style="font-family: 'Archivo', sans-serif; font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">3</div>
+                <div style="font-size: 13px; color: #8A827A">Registered users</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid #F5F1ED">
+                <div style="flex: 1; height: 6px; border-radius: 999px; background: #F4F1ED; overflow: hidden">
+                  <div style="width: 66.7%; height: 100%; border-radius: 999px; background: #E58AA1"></div>
+                </div>
+                <span style="font-size: 12px; color: #8A827A; white-space: nowrap"><b style="color: #C9587E; font-weight: 600">2 Pro</b> · 67%</span>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 20px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; align-items: center; justify-content: space-between">
+                <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: #EEF4F0; color: #5F8D72">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </span>
+                <span style="font-size: 11.5px; font-weight: 600; color: #5F8D72; background: #EEF4F0; padding: 4px 9px; border-radius: 999px">+2 this week</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <div style="font-family: 'Archivo', sans-serif; font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">15</div>
+                <div style="font-size: 13px; color: #8A827A">Sessions completed</div>
+              </div>
+              <div style="display: flex; gap: 14px; font-size: 12px; color: #8A827A; padding-top: 12px; border-top: 1px solid #F5F1ED">
+                <span><b style="color: #1A1714; font-weight: 600">100%</b> finish rate</span>
+                <span><b style="color: #1A1714; font-weight: 600">5m</b> avg</span>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 20px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; align-items: center; justify-content: space-between">
+                <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: #EFF0F8; color: #8E97C7">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
+                </span>
+                <span style="font-size: 11.5px; font-weight: 500; color: #A89E96; font-family: ui-monospace, monospace">sonnet-4-6</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <div style="font-family: 'Archivo', sans-serif; font-size: 34px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">$0.90</div>
+                <div style="font-size: 13px; color: #8A827A">Gigi spend, all time</div>
+              </div>
+              <div style="display: flex; gap: 14px; font-size: 12px; color: #8A827A; padding-top: 12px; border-top: 1px solid #F5F1ED">
+                <span><b style="color: #1A1714; font-weight: 600">42</b> runs</span>
+                <span><b style="color: #1A1714; font-weight: 600">$0.021</b> / run</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content health -->
+          <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 24px; padding: 26px 28px; box-shadow: 0 14px 38px rgba(20,15,10,.10); display: flex; flex-direction: column; gap: 22px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <h3 style="font-family: 'Archivo', sans-serif; font-size: 17px; font-weight: 700; margin: 0">Content health</h3>
+                <p style="margin: 0; font-size: 13px; color: #8A827A">What's ready for testers, and what still needs work</p>
+              </div>
+              <span style="font-size: 12px; font-weight: 600; color: #B98A4A; background: #F6EFE4; padding: 6px 12px; border-radius: 999px">2 gaps to close</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px">
+
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div style="display: flex; align-items: baseline; justify-content: space-between">
+                  <span style="font-size: 13.5px; font-weight: 500">Workout images</span>
+                  <span style="font-size: 13px; font-variant-numeric: tabular-nums; color: #D9462F; font-weight: 600">1 / 35</span>
+                </div>
+                <div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden">
+                  <div style="width: 2.9%; height: 100%; border-radius: 999px; background: #D9462F"></div>
+                </div>
+                <span style="font-size: 12px; color: #8A827A; line-height: 1.5">34 workouts have no image_ref</span>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <div style="display: flex; align-items: baseline; justify-content: space-between">
+                  <span style="font-size: 13.5px; font-weight: 500">Recipe images</span>
+                  <span style="font-size: 13px; font-variant-numeric: tabular-nums; color: #5F8D72; font-weight: 600">126 / 126</span>
+                </div>
+                <div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden">
+                  <div style="width: 100%; height: 100%; border-radius: 999px; background: #5F8D72"></div>
+                </div>
+                <span style="font-size: 12px; color: #8A827A; line-height: 1.5">Fully covered</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px; background: #FDF9F2; border: 1px solid #F2E7D5; border-radius: 14px; padding: 14px 18px">
+              <span style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: #F6EFE4; color: #B98A4A; flex-shrink: 0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+              </span>
+              <div style="flex: 1; font-size: 13.5px; line-height: 1.5; color: #6F665E">Nothing is scheduled. <b style="color: #1A1714; font-weight: 600">0 workouts and 0 recipes</b> have a publish date — the pipeline is empty for the tester release.</div>
+              <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #B98A4A; background: #fff; border: 1px solid #F2E7D5; border-radius: 999px; padding: 8px 16px; cursor: pointer; white-space: nowrap">Schedule content</button>
+            </div>
+          </div>
+
+          <!-- Charts row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px">
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 22px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 18px">
+              <h3 style="font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700; margin: 0">Workouts by format</h3>
+              <div style="display: flex; align-items: center; gap: 18px">
+                <div style="position: relative; width: 126px; height: 126px; flex-shrink: 0">
+                  <svg viewBox="0 0 140 140" style="width: 100%; height: 100%">
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#F4F1ED" stroke-width="15"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#7E9770" stroke-width="15" stroke-linecap="round" stroke-dasharray="194.04 132.69" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#C4704F" stroke-width="15" stroke-linecap="round" stroke-dasharray="35.34 291.39" stroke-dashoffset="-196.04" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#8D7BA6" stroke-width="15" stroke-linecap="round" stroke-dasharray="26.01 300.72" stroke-dashoffset="-233.38" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#7A92A5" stroke-width="15" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-261.39" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#6FA39B" stroke-width="15" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-280.06" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#B76578" stroke-width="15" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-298.73" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#8E97C7" stroke-width="15" stroke-linecap="round" stroke-dasharray="7.33 319.40" stroke-dashoffset="-317.40" transform="rotate(-90 70 70)"/>
+                  </svg>
+                  <div style="position: absolute; inset: 0; display: grid; place-items: center; text-align: center">
+                    <div>
+                      <div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">35</div>
+                      <div style="font-size: 11px; color: #A89E96; margin-top: 2px">total</div>
+                    </div>
+                  </div>
+                </div>
+                <ul style="flex: 1; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; min-width: 0">
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #7E9770; flex-shrink: 0"></span><span style="flex: 1">Circuit</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">21</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #C4704F; flex-shrink: 0"></span><span style="flex: 1">AMRAP</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">4</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #8D7BA6; flex-shrink: 0"></span><span style="flex: 1">Rounds</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">3</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #7A92A5; flex-shrink: 0"></span><span style="flex: 1">EMOM</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #6FA39B; flex-shrink: 0"></span><span style="flex: 1">Tabata</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #B76578; flex-shrink: 0"></span><span style="flex: 1">For Time</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #8E97C7; flex-shrink: 0"></span><span style="flex: 1">Mobility</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">1</span></li>
+                </ul>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 22px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 18px">
+              <h3 style="font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700; margin: 0">Exercise library</h3>
+              <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 13px">
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Bodyweight</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">81</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 100%; height: 100%; border-radius: 999px; background: #7E9770"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Dumbbell</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">63</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 77.8%; height: 100%; border-radius: 999px; background: #B98A4A"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Kettlebell</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">41</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 50.6%; height: 100%; border-radius: 999px; background: #8D7BA6"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Barbell</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">35</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 43.2%; height: 100%; border-radius: 999px; background: #7A92A5"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Cardio</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">23</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 28.4%; height: 100%; border-radius: 999px; background: #6FA39B"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Resistance Band</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">20</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 24.7%; height: 100%; border-radius: 999px; background: #C4704F"></div></div></li>
+              </ul>
+              <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid #F5F1ED; font-size: 12.5px; color: #8A827A">263 total · <b style="color: #1A1714; font-weight: 600">Lower Body</b> is the deepest at 100</div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 22px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 18px">
+              <div style="display: flex; align-items: baseline; justify-content: space-between">
+                <h3 style="font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700; margin: 0">Recipes by category</h3>
+                <span style="font-size: 12px; color: #A89E96">avg 30 min</span>
+              </div>
+              <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 13px">
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Snack</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">58</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 100%; height: 100%; border-radius: 999px; background: #E58AA1"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Lunch / Dinner</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">49</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 84.5%; height: 100%; border-radius: 999px; background: #ECB0C0"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Breakfast</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">19</span></div><div style="height: 7px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 32.8%; height: 100%; border-radius: 999px; background: #F4D6DF"></div></div></li>
+              </ul>
+              <div style="padding-top: 4px; display: flex; flex-direction: column; gap: 9px">
+                <div style="font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #A89E96">Dietary coverage</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                  <span style="font-size: 12px; color: #6F665E; background: #F4F1ED; border-radius: 999px; padding: 5px 11px">Gluten Free 117</span>
+                  <span style="font-size: 12px; color: #6F665E; background: #F4F1ED; border-radius: 999px; padding: 5px 11px">Dairy Free 106</span>
+                  <span style="font-size: 12px; color: #6F665E; background: #F4F1ED; border-radius: 999px; padding: 5px 11px">Vegetarian 93</span>
+                  <span style="font-size: 12px; color: #6F665E; background: #F4F1ED; border-radius: 999px; padding: 5px 11px">Meat 25</span>
+                  <span style="font-size: 12px; color: #6F665E; background: #F4F1ED; border-radius: 999px; padding: 5px 11px">Vegan 8</span>
+                </div>
+              </div>
+              <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid #F5F1ED; font-size: 12.5px; color: #8A827A">Breakfast is thin — 19 vs 58 snacks</div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+        <div style="width: 1360px; display: flex; gap: 14px; background: #FFFDF7; border: 1px dashed #E8DCC4; border-radius: 14px; padding: 16px 20px">
+          <span style="font-size: 12px; font-weight: 700; color: #B98A4A; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0; padding-top: 1px">Notes</span>
+          <div style="font-size: 13px; line-height: 1.65; color: #6F665E; text-wrap: pretty">Reframes the top row around <b style="color: #1A1714">questions you actually ask</b> — how much is live, who's paying, are people training, what's Gigi costing. Pink now appears four times total: logo dot, active nav, the Pro bar, and the recipe series. Status colour is semantic (green = healthy, amber = attention, red = broken) rather than everything-is-blush. The gaps panel is the new idea: it turns dead columns into a to-do list before the tester release.</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- ============================== 1b ============================== -->
+    <div id="1b" style="display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <span style="font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .08em; background: #1A1714; color: #fff; padding: 5px 10px; border-radius: 6px">1b</span>
+        <span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700">Publishing pipeline</span>
+        <span style="font-size: 14px; color: #8A827A">Organised around getting content out the door</span>
+      </div>
+
+      <div style="width: 1360px; background: #FAF8F6; border-radius: 20px; overflow: hidden; box-shadow: 0 24px 60px rgba(20,15,10,.12); display: flex; min-height: 1180px">
+
+        <aside style="width: 232px; flex-shrink: 0; background: #FFFFFF; border-right: 1px solid #F1ECE6; padding: 28px 20px; display: flex; flex-direction: column">
+          <div style="font-family: 'Archivo', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: -0.02em; padding: 0 12px; margin-bottom: 32px">MOVED<span style="color: #E58AA1">.</span></div>
+          <nav style="display: flex; flex-direction: column; gap: 4px; font-size: 14.5px">
+            <a href="#1b" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; background: #FBECF0; color: #C9587E; font-weight: 600">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              Dashboard
+            </a>
+            <a href="#1b" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M3 8v8M6 5v14M18 5v14M21 8v8"/></svg>
+              Workouts
+            </a>
+            <a href="#1b" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Workout
+            </a>
+            <a href="#1b" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10a4 4 0 0 1 0 8H4zM4 12h12a4 4 0 0 1 0 8H4z"/></svg>
+              Recipes
+            </a>
+            <a href="#1b" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Recipe
+            </a>
+          </nav>
+          <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #F1ECE6; display: flex; flex-direction: column; gap: 8px">
+            <div style="font-size: 12px; color: #A89E96; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">kieran@moved.app</div>
+            <button style="text-align: left; background: none; border: none; padding: 0; font-family: inherit; font-size: 13.5px; color: #8A827A; cursor: pointer">Sign out</button>
+          </div>
+        </aside>
+
+        <main style="flex: 1; padding: 36px 40px 48px; display: flex; flex-direction: column; gap: 24px; min-width: 0">
+
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h2 style="font-family: 'Archivo', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0">Good morning, Kieran</h2>
+              <p style="margin: 0; font-size: 14px; color: #8A827A">160 items live · 3 testers on board · nothing queued to publish</p>
+            </div>
+            <button style="font-family: inherit; font-size: 13.5px; font-weight: 600; color: #fff; background: #E58AA1; border: none; border-radius: 999px; padding: 11px 22px; cursor: pointer; box-shadow: 0 8px 20px rgba(229,138,161,.35)">+ Create</button>
+          </div>
+
+          <!-- Pipeline hero -->
+          <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 24px; padding: 28px; box-shadow: 0 14px 38px rgba(20,15,10,.10); display: flex; flex-direction: column; gap: 24px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between">
+              <h3 style="font-family: 'Archivo', sans-serif; font-size: 18px; font-weight: 700; margin: 0">Publishing pipeline</h3>
+              <span style="font-size: 13px; color: #8A827A">Workouts and recipes combined</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px">
+              <div style="background: #EEF4F0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #5F8D72"></span><span style="font-size: 12.5px; font-weight: 600; color: #5F8D72; letter-spacing: .04em; text-transform: uppercase">Live</span></div>
+                <div style="font-family: 'Archivo', sans-serif; font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">160</div>
+                <div style="font-size: 12.5px; color: #6F665E">34 workouts · 126 recipes</div>
+              </div>
+              <div style="background: #FDF6E9; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #B98A4A"></span><span style="font-size: 12.5px; font-weight: 600; color: #B98A4A; letter-spacing: .04em; text-transform: uppercase">Scheduled</span></div>
+                <div style="font-family: 'Archivo', sans-serif; font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #C6BDB2">0</div>
+                <div style="font-size: 12.5px; color: #6F665E">Nothing queued</div>
+              </div>
+              <div style="background: #F4F1ED; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #8A827A"></span><span style="font-size: 12.5px; font-weight: 600; color: #6F665E; letter-spacing: .04em; text-transform: uppercase">Draft</span></div>
+                <div style="font-family: 'Archivo', sans-serif; font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #C6BDB2">0</div>
+                <div style="font-size: 12.5px; color: #6F665E">No work in progress</div>
+              </div>
+              <div style="background: #F4F1ED; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #C6BDB2"></span><span style="font-size: 12.5px; font-weight: 600; color: #A89E96; letter-spacing: .04em; text-transform: uppercase">Archived</span></div>
+                <div style="font-family: 'Archivo', sans-serif; font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">1</div>
+                <div style="font-size: 12.5px; color: #6F665E">Hill Sprint Split Squat</div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px; background: #FDF9F2; border: 1px solid #F2E7D5; border-radius: 14px; padding: 15px 18px">
+              <span style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: #F6EFE4; color: #B98A4A; flex-shrink: 0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </span>
+              <div style="flex: 1; font-size: 13.5px; line-height: 1.5; color: #6F665E">You've published <b style="color: #1A1714; font-weight: 600">155 items in the last 30 days</b> but scheduled none. With testers coming on, a queue keeps the app feeling alive between your bulk uploads.</div>
+              <button style="font-family: inherit; font-size: 13px; font-weight: 600; color: #B98A4A; background: #fff; border: 1px solid #F2E7D5; border-radius: 999px; padding: 8px 16px; cursor: pointer; white-space: nowrap">Schedule something</button>
+            </div>
+          </div>
+
+          <!-- Recently added + engagement -->
+          <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px">
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 24px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 18px">
+              <div style="display: flex; align-items: baseline; justify-content: space-between">
+                <h3 style="font-family: 'Archivo', sans-serif; font-size: 16px; font-weight: 700; margin: 0">Published in the last 30 days</h3>
+                <a href="#1b" style="font-size: 13px; font-weight: 600">View all</a>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 16px">
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; font-size: 13.5px"><span style="font-weight: 500">Recipes</span><span style="color: #8A827A"><b style="color: #C9587E; font-weight: 600">126</b> added · 0 this week</span></div>
+                  <div style="height: 10px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 100%; height: 100%; border-radius: 999px; background: #E58AA1"></div></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; font-size: 13.5px"><span style="font-weight: 500">Workouts</span><span style="color: #8A827A"><b style="color: #C9587E; font-weight: 600">29</b> added · 5 this week</span></div>
+                  <div style="height: 10px; border-radius: 999px; background: #F4F1ED; overflow: hidden; position: relative"><div style="position: absolute; inset: 0 auto 0 0; width: 23%; border-radius: 999px; background: #ECB0C0"></div><div style="position: absolute; inset: 0 auto 0 0; width: 4%; border-radius: 999px; background: #C9587E"></div></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; font-size: 13.5px"><span style="font-weight: 500">Sessions logged</span><span style="color: #8A827A"><b style="color: #C9587E; font-weight: 600">11</b> logged · 2 this week</span></div>
+                  <div style="height: 10px; border-radius: 999px; background: #F4F1ED; overflow: hidden; position: relative"><div style="position: absolute; inset: 0 auto 0 0; width: 8.7%; border-radius: 999px; background: #ECB0C0"></div><div style="position: absolute; inset: 0 auto 0 0; width: 1.6%; border-radius: 999px; background: #C9587E"></div></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; font-size: 13.5px"><span style="font-weight: 500">New signups</span><span style="color: #8A827A"><b style="color: #1A1714; font-weight: 600">2</b> joined · 0 this week</span></div>
+                  <div style="height: 10px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 1.6%; height: 100%; border-radius: 999px; background: #ECB0C0"></div></div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 18px; padding-top: 14px; border-top: 1px solid #F5F1ED; font-size: 12px; color: #8A827A">
+                <span style="display: flex; align-items: center; gap: 7px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #C9587E"></span>Last 7 days</span>
+                <span style="display: flex; align-items: center; gap: 7px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #ECB0C0"></span>Last 30 days</span>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 24px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 20px">
+              <h3 style="font-family: 'Archivo', sans-serif; font-size: 16px; font-weight: 700; margin: 0">Are testers training?</h3>
+              <div style="display: flex; align-items: center; gap: 20px">
+                <div style="position: relative; width: 116px; height: 116px; flex-shrink: 0">
+                  <svg viewBox="0 0 132 132" style="width: 100%; height: 100%">
+                    <circle cx="66" cy="66" r="46" fill="none" stroke="#F4F1ED" stroke-width="12"/>
+                    <circle cx="66" cy="66" r="46" fill="none" stroke="#5F8D72" stroke-width="12" stroke-linecap="round" stroke-dasharray="289.03 0" transform="rotate(-90 66 66)"/>
+                  </svg>
+                  <div style="position: absolute; inset: 0; display: grid; place-items: center; text-align: center">
+                    <div>
+                      <div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1">100%</div>
+                      <div style="font-size: 11px; color: #A89E96; margin-top: 2px">finished</div>
+                    </div>
+                  </div>
+                </div>
+                <dl style="flex: 1; margin: 0; display: flex; flex-direction: column; gap: 11px; font-size: 13.5px">
+                  <div style="display: flex; justify-content: space-between"><dt style="color: #8A827A">Started</dt><dd style="margin: 0; font-variant-numeric: tabular-nums">15</dd></div>
+                  <div style="display: flex; justify-content: space-between"><dt style="color: #8A827A">Completed</dt><dd style="margin: 0; font-variant-numeric: tabular-nums">15</dd></div>
+                  <div style="display: flex; justify-content: space-between"><dt style="color: #8A827A">Abandoned</dt><dd style="margin: 0; font-variant-numeric: tabular-nums">0</dd></div>
+                </dl>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; background: #FAF8F6; border-radius: 14px; padding: 14px 16px">
+                <span style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: #fff; color: #8A827A; flex-shrink: 0; box-shadow: 0 2px 8px rgba(20,15,10,.06)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </span>
+                <div style="font-size: 12.5px; line-height: 1.5; color: #6F665E">Only <b style="color: #1A1714; font-weight: 600">2 of 3</b> users have ever trained. 1h 15m total, 5m average — sessions are short.</div>
+              </div>
+              <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid #F5F1ED; display: flex; justify-content: space-between; font-size: 13px">
+                <span style="color: #8A827A">Last session</span><span>4 Aug, 11:28pm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gigi + saves -->
+          <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px">
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 24px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 20px">
+              <div style="display: flex; align-items: baseline; justify-content: space-between">
+                <h3 style="font-family: 'Archivo', sans-serif; font-size: 16px; font-weight: 700; margin: 0">Gigi AI usage &amp; cost</h3>
+                <span style="font-size: 12px; color: #A89E96; font-family: ui-monospace, monospace">claude-sonnet-4-6</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px">
+                <div style="background: #FBECF0; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 5px">
+                  <div style="font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #A8607E">All time</div>
+                  <div style="font-family: 'Archivo', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; color: #C9587E; font-variant-numeric: tabular-nums">$0.90</div>
+                </div>
+                <div style="background: #F4F1ED; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 5px">
+                  <div style="font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #A89E96">Last 30 days</div>
+                  <div style="font-family: 'Archivo', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">$0.90</div>
+                </div>
+                <div style="background: #F4F1ED; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 5px">
+                  <div style="font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #A89E96">Per run</div>
+                  <div style="font-family: 'Archivo', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">$0.021</div>
+                </div>
+              </div>
+              <dl style="margin: 0; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px">
+                <div style="display: flex; justify-content: space-between"><dt style="color: #8A827A">Total runs</dt><dd style="margin: 0; font-variant-numeric: tabular-nums">42 · 38 generate, 4 swap</dd></div>
+                <div style="display: flex; justify-content: space-between"><dt style="color: #8A827A">Input tokens</dt><dd style="margin: 0; font-variant-numeric: tabular-nums">79,855</dd></div>
+                <div style="display: flex; justify-content: space-between"><dt style="color: #8A827A">Output tokens</dt><dd style="margin: 0; font-variant-numeric: tabular-nums">43,820</dd></div>
+                <div style="display: flex; justify-content: space-between"><dt style="color: #8A827A">Runs that became workouts</dt><dd style="margin: 0; font-variant-numeric: tabular-nums; color: #B98A4A; font-weight: 600">9 of 42</dd></div>
+              </dl>
+              <p style="margin: 0; font-size: 11.5px; line-height: 1.6; color: #C6BDB2">Estimated at $3.00/M input · $15.00/M output. One legacy run has no model logged and counts as $0.</p>
+            </div>
+
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 24px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 18px">
+              <h3 style="font-family: 'Archivo', sans-serif; font-size: 16px; font-weight: 700; margin: 0">Where content comes from</h3>
+              <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px">
+                <li style="display: flex; flex-direction: column; gap: 7px"><div style="display: flex; justify-content: space-between; font-size: 13.5px"><span>Coach</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">24</span></div><div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 100%; height: 100%; border-radius: 999px; background: #7E9770"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 7px"><div style="display: flex; justify-content: space-between; font-size: 13.5px"><span>Gigi (AI)</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">9</span></div><div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 37.5%; height: 100%; border-radius: 999px; background: #8E97C7"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 7px"><div style="display: flex; justify-content: space-between; font-size: 13.5px"><span>User-built</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">2</span></div><div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 8.3%; height: 100%; border-radius: 999px; background: #7A92A5"></div></div></li>
+                <li style="display: flex; flex-direction: column; gap: 7px"><div style="display: flex; justify-content: space-between; font-size: 13.5px"><span style="color: #A89E96">Saved</span><span style="color: #C6BDB2; font-variant-numeric: tabular-nums">0</span></div><div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"></div></li>
+              </ul>
+              <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid #F5F1ED; display: flex; flex-direction: column; gap: 10px; font-size: 13px">
+                <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Workouts saved by users</span><span style="font-variant-numeric: tabular-nums">2</span></div>
+                <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Recipes saved by users</span><span style="font-variant-numeric: tabular-nums">1</span></div>
+                <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Notifications sent</span><span style="font-variant-numeric: tabular-nums">3 · all workouts</span></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+        <div style="width: 1360px; display: flex; gap: 14px; background: #FFFDF7; border: 1px dashed #E8DCC4; border-radius: 14px; padding: 16px 20px">
+          <span style="font-size: 12px; font-weight: 700; color: #B98A4A; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0; padding-top: 1px">Notes</span>
+          <div style="font-size: 13px; line-height: 1.65; color: #6F665E; text-wrap: pretty">Drops the four-tile row entirely and makes <b style="color: #1A1714">status the spine</b> — Live / Scheduled / Draft / Archived across both content types, which is the thing you'll be watching during a tester rollout. Empty states are shown as ghosted zeros rather than hidden, so an empty pipeline is visible instead of absent. Gigi gets a proper three-figure cost block plus the conversion number: 42 runs, only 9 saved workouts.</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- ============================== 1c ============================== -->
+    <div id="1c" style="display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <span style="font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .08em; background: #1A1714; color: #fff; padding: 5px 10px; border-radius: 6px">1c</span>
+        <span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700">Compact rail</span>
+        <span style="font-size: 14px; color: #8A827A">Closest to the Cake reference — dense, everything above the fold</span>
+      </div>
+
+      <div style="width: 1360px; background: #FAF8F6; border-radius: 20px; overflow: hidden; box-shadow: 0 24px 60px rgba(20,15,10,.12); display: flex; min-height: 1000px">
+
+        <aside style="width: 232px; flex-shrink: 0; background: #FFFFFF; border-right: 1px solid #F1ECE6; padding: 28px 20px; display: flex; flex-direction: column">
+          <div style="font-family: 'Archivo', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: -0.02em; padding: 0 12px; margin-bottom: 32px">MOVED<span style="color: #E58AA1">.</span></div>
+          <nav style="display: flex; flex-direction: column; gap: 4px; font-size: 14.5px">
+            <a href="#1c" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; background: #FBECF0; color: #C9587E; font-weight: 600">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              Dashboard
+            </a>
+            <a href="#1c" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M3 8v8M6 5v14M18 5v14M21 8v8"/></svg>
+              Workouts
+            </a>
+            <a href="#1c" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Workout
+            </a>
+            <a href="#1c" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10a4 4 0 0 1 0 8H4zM4 12h12a4 4 0 0 1 0 8H4z"/></svg>
+              Recipes
+            </a>
+            <a href="#1c" style="display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 12px; color: #6F665E">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Recipe
+            </a>
+          </nav>
+          <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #F1ECE6; display: flex; flex-direction: column; gap: 8px">
+            <div style="font-size: 12px; color: #A89E96; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">kieran@moved.app</div>
+            <button style="text-align: left; background: none; border: none; padding: 0; font-family: inherit; font-size: 13.5px; color: #8A827A; cursor: pointer">Sign out</button>
+          </div>
+        </aside>
+
+        <main style="flex: 1; padding: 36px 40px 48px; display: flex; flex-direction: column; gap: 22px; min-width: 0">
+
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h2 style="font-family: 'Archivo', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0">Dashboard</h2>
+              <p style="margin: 0; font-size: 14px; color: #8A827A">Live from Supabase · app-wide activity across MOVED.</p>
+            </div>
+            <div style="display: flex; gap: 10px">
+              <button style="font-family: inherit; font-size: 13.5px; font-weight: 500; color: #6F665E; background: #fff; border: 1px solid #F0E8E2; border-radius: 999px; padding: 10px 18px; cursor: pointer; box-shadow: 0 2px 8px rgba(20,15,10,.05)">Export</button>
+              <button style="font-family: inherit; font-size: 13.5px; font-weight: 600; color: #fff; background: #E58AA1; border: none; border-radius: 999px; padding: 10px 20px; cursor: pointer; box-shadow: 0 8px 20px rgba(229,138,161,.35)">+ New workout</button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 300px 1fr 300px; gap: 18px; align-items: start">
+
+            <!-- left stat stack -->
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; box-shadow: 0 5px 18px rgba(20,15,10,.07); overflow: hidden">
+              <div style="display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #F5F1ED">
+                <span style="display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #FBECF0; color: #C9587E; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h8l6 6v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 4v6h6"/></svg></span>
+                <div style="min-width: 0"><div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">160</div><div style="font-size: 12.5px; color: #8A827A">Live content</div></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #F5F1ED">
+                <span style="display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #F4F1ED; color: #6F665E; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M3 8v8M6 5v14M18 5v14M21 8v8"/></svg></span>
+                <div style="min-width: 0"><div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">34</div><div style="font-size: 12.5px; color: #8A827A">Workouts published</div></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #F5F1ED">
+                <span style="display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #F4F1ED; color: #6F665E; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10a4 4 0 0 1 0 8H4zM4 12h12a4 4 0 0 1 0 8H4z"/></svg></span>
+                <div style="min-width: 0"><div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">126</div><div style="font-size: 12.5px; color: #8A827A">Recipes published</div></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #F5F1ED">
+                <span style="display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #F4F1ED; color: #6F665E; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M3 20h4M4 4h16v10H4z"/></svg></span>
+                <div style="min-width: 0"><div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">263</div><div style="font-size: 12.5px; color: #8A827A">Exercises in library</div></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #F5F1ED">
+                <span style="display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #EEF4F0; color: #5F8D72; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                <div style="min-width: 0"><div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">15</div><div style="font-size: 12.5px; color: #8A827A">Sessions · 1h 15m</div></div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 14px; padding: 18px 20px">
+                <span style="display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #EFF0F8; color: #8E97C7; flex-shrink: 0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg></span>
+                <div style="min-width: 0"><div style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">$0.90</div><div style="font-size: 12.5px; color: #8A827A">Gigi spend · 42 runs</div></div>
+              </div>
+            </div>
+
+            <!-- centre chart -->
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 24px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 22px">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between">
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <h3 style="font-family: 'Archivo', sans-serif; font-size: 17px; font-weight: 700; margin: 0">Workout library</h3>
+                  <p style="margin: 0; font-size: 13px; color: #8A827A">35 workouts by format and category</p>
+                </div>
+                <a href="#1c" style="font-size: 13px; font-weight: 600">Manage library</a>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 26px">
+                <div style="position: relative; width: 158px; height: 158px; flex-shrink: 0">
+                  <svg viewBox="0 0 140 140" style="width: 100%; height: 100%">
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#F4F1ED" stroke-width="16"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#7E9770" stroke-width="16" stroke-linecap="round" stroke-dasharray="194.04 132.69" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#C4704F" stroke-width="16" stroke-linecap="round" stroke-dasharray="35.34 291.39" stroke-dashoffset="-196.04" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#8D7BA6" stroke-width="16" stroke-linecap="round" stroke-dasharray="26.01 300.72" stroke-dashoffset="-233.38" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#7A92A5" stroke-width="16" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-261.39" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#6FA39B" stroke-width="16" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-280.06" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#B76578" stroke-width="16" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-298.73" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="52" fill="none" stroke="#8E97C7" stroke-width="16" stroke-linecap="round" stroke-dasharray="7.33 319.40" stroke-dashoffset="-317.40" transform="rotate(-90 70 70)"/>
+                  </svg>
+                  <div style="position: absolute; inset: 0; display: grid; place-items: center; text-align: center">
+                    <div>
+                      <div style="font-family: 'Archivo', sans-serif; font-size: 30px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">35</div>
+                      <div style="font-size: 11.5px; color: #A89E96; margin-top: 3px">total</div>
+                    </div>
+                  </div>
+                </div>
+                <ul style="flex: 1; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 11px 20px; min-width: 0">
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #7E9770; flex-shrink: 0"></span><span style="flex: 1">Circuit</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">21</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #7A92A5; flex-shrink: 0"></span><span style="flex: 1">EMOM</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #C4704F; flex-shrink: 0"></span><span style="flex: 1">AMRAP</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">4</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #6FA39B; flex-shrink: 0"></span><span style="flex: 1">Tabata</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #8D7BA6; flex-shrink: 0"></span><span style="flex: 1">Rounds</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">3</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #B76578; flex-shrink: 0"></span><span style="flex: 1">For Time</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                  <li style="display: flex; align-items: center; gap: 9px; font-size: 13px"><span style="width: 9px; height: 9px; border-radius: 999px; background: #8E97C7; flex-shrink: 0"></span><span style="flex: 1">Mobility</span><span style="color: #8A827A; font-variant-numeric: tabular-nums">1</span></li>
+                </ul>
+              </div>
+
+              <div style="height: 1px; background: #F5F1ED"></div>
+
+              <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+                <li style="display: flex; align-items: center; gap: 14px; font-size: 13px"><span style="width: 92px; flex-shrink: 0">Full Body</span><div style="flex: 1; height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 100%; height: 100%; border-radius: 999px; background: #8D7BA6"></div></div><span style="width: 24px; text-align: right; color: #8A827A; font-variant-numeric: tabular-nums">26</span></li>
+                <li style="display: flex; align-items: center; gap: 14px; font-size: 13px"><span style="width: 92px; flex-shrink: 0">Conditioning</span><div style="flex: 1; height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 11.5%; height: 100%; border-radius: 999px; background: #7A92A5"></div></div><span style="width: 24px; text-align: right; color: #8A827A; font-variant-numeric: tabular-nums">3</span></li>
+                <li style="display: flex; align-items: center; gap: 14px; font-size: 13px"><span style="width: 92px; flex-shrink: 0">HIIT</span><div style="flex: 1; height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 7.7%; height: 100%; border-radius: 999px; background: #C4704F"></div></div><span style="width: 24px; text-align: right; color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                <li style="display: flex; align-items: center; gap: 14px; font-size: 13px"><span style="width: 92px; flex-shrink: 0">Lower Body</span><div style="flex: 1; height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 7.7%; height: 100%; border-radius: 999px; background: #6FA39B"></div></div><span style="width: 24px; text-align: right; color: #8A827A; font-variant-numeric: tabular-nums">2</span></li>
+                <li style="display: flex; align-items: center; gap: 14px; font-size: 13px"><span style="width: 92px; flex-shrink: 0">Upper Body</span><div style="flex: 1; height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 3.8%; height: 100%; border-radius: 999px; background: #B76578"></div></div><span style="width: 24px; text-align: right; color: #8A827A; font-variant-numeric: tabular-nums">1</span></li>
+                <li style="display: flex; align-items: center; gap: 14px; font-size: 13px"><span style="width: 92px; flex-shrink: 0">Strength</span><div style="flex: 1; height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 3.8%; height: 100%; border-radius: 999px; background: #B98A4A"></div></div><span style="width: 24px; text-align: right; color: #8A827A; font-variant-numeric: tabular-nums">1</span></li>
+                <li style="display: flex; align-items: center; gap: 14px; font-size: 13px"><span style="width: 92px; flex-shrink: 0; color: #A89E96">Mobility</span><div style="flex: 1; height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"></div><span style="width: 24px; text-align: right; color: #C6BDB2; font-variant-numeric: tabular-nums">0</span></li>
+              </ul>
+            </div>
+
+            <!-- right activity rail -->
+            <div style="display: flex; flex-direction: column; gap: 18px">
+
+              <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 22px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 16px">
+                <div style="display: flex; flex-direction: column; gap: 3px">
+                  <h3 style="font-family: 'Archivo', sans-serif; font-size: 16px; font-weight: 700; margin: 0">Activity</h3>
+                  <span style="font-size: 12.5px; color: #8A827A">Last 7 days vs 30</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 14px">
+                  <div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">5</span><span style="font-size: 12px; color: #5F8D72; font-weight: 600">of 29</span></div><span style="font-size: 12.5px; color: #8A827A">Workouts created</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">2</span><span style="font-size: 12px; color: #5F8D72; font-weight: 600">of 11</span></div><span style="font-size: 12.5px; color: #8A827A">Sessions logged</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #C6BDB2">0</span><span style="font-size: 12px; color: #A89E96; font-weight: 600">of 2</span></div><span style="font-size: 12.5px; color: #8A827A">New signups</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 5px"><div style="display: flex; align-items: baseline; gap: 8px"><span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #C6BDB2">0</span><span style="font-size: 12px; color: #A89E96; font-weight: 600">of 126</span></div><span style="font-size: 12.5px; color: #8A827A">Recipes added</span></div>
+                </div>
+              </div>
+
+              <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 22px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 16px">
+                <h3 style="font-family: 'Archivo', sans-serif; font-size: 16px; font-weight: 700; margin: 0">Users</h3>
+                <div style="display: flex; align-items: baseline; gap: 10px">
+                  <span style="font-family: 'Archivo', sans-serif; font-size: 32px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">3</span>
+                  <span style="font-size: 13px; color: #8A827A">registered</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 66.7%; height: 100%; border-radius: 999px; background: #E58AA1"></div></div>
+                  <div style="display: flex; justify-content: space-between; font-size: 12.5px"><span style="color: #C9587E; font-weight: 600">2 Pro</span><span style="color: #8A827A">1 free</span></div>
+                </div>
+                <div style="padding-top: 14px; border-top: 1px solid #F5F1ED; display: flex; flex-direction: column; gap: 9px; font-size: 12.5px">
+                  <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Have trained</span><span style="font-variant-numeric: tabular-nums">2 of 3</span></div>
+                  <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Saved something</span><span style="font-variant-numeric: tabular-nums">3 items</span></div>
+                </div>
+              </div>
+
+              <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 22px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 14px">
+                <div style="display: flex; align-items: center; justify-content: space-between">
+                  <h3 style="font-family: 'Archivo', sans-serif; font-size: 16px; font-weight: 700; margin: 0">Gigi</h3>
+                  <span style="font-size: 11px; color: #A89E96; font-family: ui-monospace, monospace">sonnet-4-6</span>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 10px">
+                  <span style="font-family: 'Archivo', sans-serif; font-size: 32px; font-weight: 700; line-height: 1; color: #C9587E; font-variant-numeric: tabular-nums">$0.90</span>
+                  <span style="font-size: 13px; color: #8A827A">all time</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 9px; font-size: 12.5px; padding-top: 12px; border-top: 1px solid #F5F1ED">
+                  <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Runs</span><span style="font-variant-numeric: tabular-nums">42</span></div>
+                  <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Tokens in / out</span><span style="font-variant-numeric: tabular-nums">79.9k / 43.8k</span></div>
+                  <div style="display: flex; justify-content: space-between"><span style="color: #8A827A">Cost per run</span><span style="font-variant-numeric: tabular-nums">$0.021</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- bottom strip -->
+          <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 22px 24px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; align-items: center; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0">
+              <h3 style="font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700; margin: 0">Needs attention</h3>
+              <span style="font-size: 12.5px; color: #8A827A">Before testers arrive</span>
+            </div>
+            <div style="flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px">
+              <div style="display: flex; align-items: center; gap: 11px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #D9462F; flex-shrink: 0"></span><div style="font-size: 12.5px; line-height: 1.4"><b style="font-weight: 600">34 workouts</b><br><span style="color: #8A827A">no image</span></div></div>
+              <div style="display: flex; align-items: center; gap: 11px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #B98A4A; flex-shrink: 0"></span><div style="font-size: 12.5px; line-height: 1.4"><b style="font-weight: 600">212 exercises</b><br><span style="color: #8A827A">no GIF</span></div></div>
+              <div style="display: flex; align-items: center; gap: 11px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #D9462F; flex-shrink: 0"></span><div style="font-size: 12.5px; line-height: 1.4"><b style="font-weight: 600">0 Pro-only recipes</b><br><span style="color: #8A827A">Pro gates nothing</span></div></div>
+              <div style="display: flex; align-items: center; gap: 11px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #B98A4A; flex-shrink: 0"></span><div style="font-size: 12.5px; line-height: 1.4"><b style="font-weight: 600">0 scheduled</b><br><span style="color: #8A827A">pipeline empty</span></div></div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+        <div style="width: 1360px; display: flex; gap: 14px; background: #FFFDF7; border: 1px dashed #E8DCC4; border-radius: 14px; padding: 16px 20px">
+          <span style="font-size: 12px; font-weight: 700; color: #B98A4A; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0; padding-top: 1px">Notes</span>
+          <div style="font-size: 13px; line-height: 1.65; color: #6F665E; text-wrap: pretty">Closest to your Mobbin reference. Six stats collapse into <b style="color: #1A1714">one bordered stack</b> instead of six floating cards, which frees the centre for a single large chart and keeps everything on one screen with no scrolling. The right rail is the Cake "Activity" column. Densest of the three, and the least warm — best if you check this daily and want no scrolling.</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- ============================== 1d — mobile ============================== -->
+    <div id="1d" style="display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: baseline; gap: 12px">
+        <span style="font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .08em; background: #1A1714; color: #fff; padding: 5px 10px; border-radius: 6px">1d</span>
+        <span style="font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700">Mobile</span>
+        <span style="font-size: 14px; color: #8A827A">Applies to whichever you pick</span>
+      </div>
+
+      <div style="width: 390px; background: #FAF8F6; border-radius: 20px; overflow: hidden; box-shadow: 0 24px 60px rgba(20,15,10,.12); display: flex; flex-direction: column; min-height: 1000px">
+
+        <header style="background: #fff; border-bottom: 1px solid #F1ECE6; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0">
+          <div style="font-family: 'Archivo', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.02em">MOVED<span style="color: #E58AA1">.</span></div>
+          <button style="display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #FAF8F6; border: 1px solid #F1ECE6; color: #6F665E; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          </button>
+        </header>
+
+        <main style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 96px">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h2 style="font-family: 'Archivo', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 0">Dashboard</h2>
+            <p style="margin: 0; font-size: 13px; color: #8A827A">Live from Supabase</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 16px; padding: 16px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 8px">
+              <span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: #FBECF0; color: #C9587E"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h8l6 6v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 4v6h6"/></svg></span>
+              <div style="font-family: 'Archivo', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">160</div>
+              <div style="font-size: 12.5px; color: #8A827A">Live content</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 16px; padding: 16px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 8px">
+              <span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: #F4F1ED; color: #6F665E"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+              <div style="font-family: 'Archivo', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">3</div>
+              <div style="font-size: 12.5px; color: #8A827A">Users · 2 Pro</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 16px; padding: 16px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 8px">
+              <span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: #EEF4F0; color: #5F8D72"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+              <div style="font-family: 'Archivo', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">15</div>
+              <div style="font-size: 12.5px; color: #8A827A">Sessions done</div>
+            </div>
+            <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 16px; padding: 16px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 8px">
+              <span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: #EFF0F8; color: #8E97C7"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg></span>
+              <div style="font-family: 'Archivo', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">$0.90</div>
+              <div style="font-size: 12.5px; color: #8A827A">Gigi · 42 runs</div>
+            </div>
+          </div>
+
+          <div style="background: #FDF9F2; border: 1px solid #F2E7D5; border-radius: 16px; padding: 16px; display: flex; gap: 12px">
+            <span style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: #F6EFE4; color: #B98A4A; flex-shrink: 0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+            <div style="font-size: 13px; line-height: 1.55; color: #6F665E">2 gaps before testers: <b style="color: #1A1714; font-weight: 600">34 workouts without images</b>, and nothing scheduled to publish.</div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 20px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 18px">
+            <h3 style="font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700; margin: 0">Workouts by format</h3>
+            <div style="display: flex; justify-content: center">
+              <div style="position: relative; width: 150px; height: 150px">
+                <svg viewBox="0 0 140 140" style="width: 100%; height: 100%">
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#F4F1ED" stroke-width="16"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#7E9770" stroke-width="16" stroke-linecap="round" stroke-dasharray="194.04 132.69" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#C4704F" stroke-width="16" stroke-linecap="round" stroke-dasharray="35.34 291.39" stroke-dashoffset="-196.04" transform="rotate(-90 70 70)"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#8D7BA6" stroke-width="16" stroke-linecap="round" stroke-dasharray="26.01 300.72" stroke-dashoffset="-233.38" transform="rotate(-90 70 70)"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#7A92A5" stroke-width="16" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-261.39" transform="rotate(-90 70 70)"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#6FA39B" stroke-width="16" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-280.06" transform="rotate(-90 70 70)"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#B76578" stroke-width="16" stroke-linecap="round" stroke-dasharray="16.67 310.06" stroke-dashoffset="-298.73" transform="rotate(-90 70 70)"/>
+                  <circle cx="70" cy="70" r="52" fill="none" stroke="#8E97C7" stroke-width="16" stroke-linecap="round" stroke-dasharray="7.33 319.40" stroke-dashoffset="-317.40" transform="rotate(-90 70 70)"/>
+                </svg>
+                <div style="position: absolute; inset: 0; display: grid; place-items: center; text-align: center">
+                  <div>
+                    <div style="font-family: 'Archivo', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums">35</div>
+                    <div style="font-size: 11px; color: #A89E96; margin-top: 2px">total</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ul style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px">
+              <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #7E9770; flex-shrink: 0"></span><span style="flex: 1">Circuit</span><span style="color: #8A827A">21</span></li>
+              <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #7A92A5; flex-shrink: 0"></span><span style="flex: 1">EMOM</span><span style="color: #8A827A">2</span></li>
+              <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #C4704F; flex-shrink: 0"></span><span style="flex: 1">AMRAP</span><span style="color: #8A827A">4</span></li>
+              <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #6FA39B; flex-shrink: 0"></span><span style="flex: 1">Tabata</span><span style="color: #8A827A">2</span></li>
+              <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #8D7BA6; flex-shrink: 0"></span><span style="flex: 1">Rounds</span><span style="color: #8A827A">3</span></li>
+              <li style="display: flex; align-items: center; gap: 8px; font-size: 12.5px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #B76578; flex-shrink: 0"></span><span style="flex: 1">For Time</span><span style="color: #8A827A">2</span></li>
+            </ul>
+          </div>
+
+          <div style="background: #fff; border: 1px solid #F1ECE6; border-radius: 18px; padding: 20px; box-shadow: 0 5px 18px rgba(20,15,10,.07); display: flex; flex-direction: column; gap: 16px">
+            <h3 style="font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700; margin: 0">Recipes</h3>
+            <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 13px">
+              <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Snack</span><span style="color: #8A827A">58</span></div><div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 100%; height: 100%; border-radius: 999px; background: #E58AA1"></div></div></li>
+              <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Lunch / Dinner</span><span style="color: #8A827A">49</span></div><div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 84.5%; height: 100%; border-radius: 999px; background: #ECB0C0"></div></div></li>
+              <li style="display: flex; flex-direction: column; gap: 6px"><div style="display: flex; justify-content: space-between; font-size: 13px"><span>Breakfast</span><span style="color: #8A827A">19</span></div><div style="height: 8px; border-radius: 999px; background: #F4F1ED; overflow: hidden"><div style="width: 32.8%; height: 100%; border-radius: 999px; background: #F4D6DF"></div></div></li>
+            </ul>
+          </div>
+        </main>
+
+        <nav style="position: sticky; bottom: 0; background: rgba(255,255,255,.94); backdrop-filter: blur(12px); border-top: 1px solid #F1ECE6; padding: 10px 12px 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px">
+          <a href="#1d" style="display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; border-radius: 12px; color: #C9587E; min-height: 56px; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span style="font-size: 11px; font-weight: 600">Dashboard</span>
+          </a>
+          <a href="#1d" style="display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; border-radius: 12px; color: #8A827A; min-height: 56px; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M3 8v8M6 5v14M18 5v14M21 8v8"/></svg>
+            <span style="font-size: 11px">Workouts</span>
+          </a>
+          <a href="#1d" style="display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; border-radius: 12px; color: #8A827A; min-height: 56px; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10a4 4 0 0 1 0 8H4zM4 12h12a4 4 0 0 1 0 8H4z"/></svg>
+            <span style="font-size: 11px">Recipes</span>
+          </a>
+          <a href="#1d" style="display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; border-radius: 12px; color: #8A827A; min-height: 56px; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+            <span style="font-size: 11px">Create</span>
+          </a>
+        </nav>
+      </div>
+
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+        <div style="width: 390px; display: flex; flex-direction: column; gap: 10px; background: #FFFDF7; border: 1px dashed #E8DCC4; border-radius: 14px; padding: 16px 18px">
+          <span style="font-size: 12px; font-weight: 700; color: #B98A4A; letter-spacing: .06em; text-transform: uppercase">Notes</span>
+          <div style="font-size: 13px; line-height: 1.65; color: #6F665E; text-wrap: pretty">Sidebar becomes a bottom bar with the two "New" items collapsed into one Create action — 56px tall targets. Stats go 2-up, charts full width. You said forms need to work properly on the phone, so I'll do the same treatment for New Workout and New Recipe once you pick a direction.</div>
+        </div>
+      </sc-if>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Review&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showNotes: this.props.showNotes ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>

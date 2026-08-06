@@ -38,6 +38,40 @@ module.exports = {
           500: '#8A827A', // text.secondary — subtitles/body-secondary (exact)
           300: '#C6BDB2', // text.ghost — faintest placeholder tone (exact)
         },
+        // Redesign (2026-08): warm-neutral surfaces/borders. Blush is now
+        // reserved for interactive intent only (see design_handoff_crm_redesign
+        // README) — these replace blush-50/blush-100 as the default
+        // card/table/input/page treatment.
+        surface: {
+          page: '#FAF8F6',
+          input: '#FAF8F6',
+          warm: '#F4F1ED',
+          rowAlt: '#FDFCFB',
+          header: '#FCFAF8',
+        },
+        line: {
+          card: '#F1ECE6',
+          input: '#F0E8E2',
+          divider: '#F5F1ED',
+        },
+        // Semantic status colours — replace blush-tinted status badges so
+        // status carries information at a glance.
+        success: {
+          DEFAULT: '#5F8D72',
+          tint: '#EEF4F0',
+        },
+        warning: {
+          DEFAULT: '#B98A4A',
+          tint: '#F6EFE4',
+          bg: '#FDF9F2',
+          border: '#F2E7D5',
+        },
+        error: {
+          DEFAULT: '#D9462F',
+          tint: '#FDEEEC',
+          border: '#F6D9D4',
+          text: '#A33A28',
+        },
       },
       fontFamily: {
         // Archivo (variable, 700/800/900 used) — display/UI emphasis.
@@ -64,6 +98,8 @@ module.exports = {
         cardLg: '0 14px 38px rgba(20,15,10,0.10)',
         // shadow.cta — blush primary buttons.
         cta: '0 8px 20px rgba(229,138,161,0.35)',
+        // shadow.subtle — toolbar buttons and inputs (redesign).
+        subtle: '0 2px 8px rgba(20,15,10,0.05)',
       },
     },
   },

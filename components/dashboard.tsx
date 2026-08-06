@@ -6,16 +6,18 @@
 // documented in design-reference/design-tokens.md §1.
 
 import type { ReactNode } from 'react'
-import type { WorkoutFormat, WorkoutCategory, WorkoutSource } from '@/lib/types'
+import type { WorkoutCategory, WorkoutSource } from '@/lib/types'
+import type { DashboardWorkoutFormat } from '@/lib/dashboard'
 
 // Muted format accents (design-tokens.md §1 "Workout-format accents").
-export const FORMAT_ACCENTS: Record<WorkoutFormat, string> = {
+export const FORMAT_ACCENTS: Record<DashboardWorkoutFormat, string> = {
   Rounds: '#8D7BA6',
   AMRAP: '#C4704F',
   EMOM: '#7A92A5',
   'For Time': '#B76578',
   Tabata: '#6FA39B',
   Circuit: '#7E9770',
+  Mobility: '#8E97C7', // FormatAccent.mobility (iOS tokens)
 }
 
 // Categories reuse the same muted accent family for visual consistency.

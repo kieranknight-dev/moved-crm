@@ -16,14 +16,24 @@ const WORKOUT_CATEGORIES: readonly WorkoutCategory[] = [
   'Conditioning',
   'Mobility',
   'Full Body',
+  'Upper Body',
+  'Lower Body',
 ]
-const WORKOUT_FORMATS: readonly WorkoutFormat[] = [
+// 'Mobility' is a real format value in the live database (one row) that
+// predates the current builder's six formats and isn't a value the builder
+// itself can author — it's not part of the WorkoutFormat union used
+// elsewhere (lib/builder.ts's format switches are exhaustive over the six
+// authorable formats). Widened here, dashboard-display-only, so the format
+// breakdown accounts for every row that actually exists.
+export type DashboardWorkoutFormat = WorkoutFormat | 'Mobility'
+const WORKOUT_FORMATS: readonly DashboardWorkoutFormat[] = [
   'Rounds',
   'AMRAP',
   'EMOM',
   'For Time',
   'Tabata',
   'Circuit',
+  'Mobility',
 ]
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -53,7 +63,7 @@ export interface DashboardStats {
     total: number
     bySource: Record<WorkoutSource, number>
     byCategory: Record<WorkoutCategory, number>
-    byFormat: Record<WorkoutFormat, number>
+    byFormat: Record<DashboardWorkoutFormat, number>
   }
   sessions: {
     total: number
@@ -230,7 +240,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       ) as Record<WorkoutCategory, number>,
       byFormat: Object.fromEntries(
         WORKOUT_FORMATS.map((format, i) => [format, workoutsByFormat[i]])
-      ) as Record<WorkoutFormat, number>,
+      ) as Record<DashboardWorkoutFormat, number>,
     },
     sessions: {
       total: totalSessions,
