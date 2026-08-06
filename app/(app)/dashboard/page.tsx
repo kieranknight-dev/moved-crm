@@ -1,22 +1,25 @@
 import { getDashboardStats, GIGI_PRICING } from '@/lib/dashboard'
 import {
-  StatCard,
   Card,
+  CardTakeaway,
+  KpiCard,
+  ProgressBar,
   Donut,
   Legend,
   BreakdownBars,
   ActivityBars,
   CompletionRing,
+  ContentHealthPanel,
   FORMAT_ACCENTS,
-  CATEGORY_ACCENTS,
-  SOURCE_LABELS,
+  EXERCISE_CATEGORY_ACCENTS,
+  RECIPE_CATEGORY_ACCENTS,
+  RECIPE_CATEGORY_LABELS,
   UsersIcon,
-  DumbbellIcon,
   CheckIcon,
-  ClockIcon,
   SparkIcon,
+  LayersIcon,
 } from '@/components/dashboard'
-import type { WorkoutCategory, WorkoutSource } from '@/lib/types'
+import type { ExerciseCategory, RecipeCategory } from '@/lib/types'
 import type { DashboardWorkoutFormat } from '@/lib/dashboard'
 
 // Always render fresh — these are live counts, not build-time data.
@@ -32,10 +35,8 @@ function formatDuration(totalSeconds: number): string {
   return `${s}s`
 }
 
-function plusDelta(n: number, noun: string): { text: string; positive?: boolean } {
-  return n > 0
-    ? { text: `+${n} ${noun} this week`, positive: true }
-    : { text: `No new ${noun} this week`, positive: false }
+function plusDelta(n: number, noun: string): string {
+  return n > 0 ? `+${n} ${noun} this week` : `No new ${noun} this week`
 }
 
 // Costs are typically fractions of a dollar — show cents-level precision so a
@@ -53,7 +54,7 @@ export default async function DashboardPage() {
     return (
       <div>
         <h1 className="font-display text-2xl mb-2 text-ink-900">Dashboard</h1>
-        <div className="rounded-card bg-blush-50 border border-blush-100 p-5 text-sm text-blush-700">
+        <div className="rounded-card bg-error-tint border border-error-border p-5 text-sm text-error-text">
           Couldn't load analytics. This usually means{' '}
           <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> isn't set
           in <code className="font-mono">.env.local</code> yet. (
@@ -63,28 +64,47 @@ export default async function DashboardPage() {
     )
   }
 
-  const { users, workouts, sessions, gigiUsage, growth } = stats
+  const { users, workouts, recipes, exercises, sessions, gigiUsage, growth } = stats
 
   const formatSegments = (Object.keys(FORMAT_ACCENTS) as DashboardWorkoutFormat[])
     .map((f) => ({ label: f, value: workouts.byFormat[f], color: FORMAT_ACCENTS[f] }))
     .sort((a, b) => b.value - a.value)
 
-  const categoryItems = (Object.keys(CATEGORY_ACCENTS) as WorkoutCategory[])
+  const exerciseItems = (Object.keys(EXERCISE_CATEGORY_ACCENTS) as ExerciseCategory[])
+    .map((c) => ({ label: c, value: exercises.byCategory[c], color: EXERCISE_CATEGORY_ACCENTS[c] }))
+    .sort((a, b) => b.value - a.value)
+  const deepestExerciseCategory = exerciseItems[0]
+
+  const recipeCategoryItems = (Object.keys(RECIPE_CATEGORY_ACCENTS) as RecipeCategory[])
     .map((c) => ({
-      label: c,
-      value: workouts.byCategory[c],
-      color: CATEGORY_ACCENTS[c],
+      label: RECIPE_CATEGORY_LABELS[c],
+      value: recipes.byCategory[c],
+      color: RECIPE_CATEGORY_ACCENTS[c],
     }))
     .sort((a, b) => b.value - a.value)
-
-  const sourceItems = (Object.keys(SOURCE_LABELS) as WorkoutSource[])
-    .map((s) => ({ label: SOURCE_LABELS[s], value: workouts.bySource[s] }))
-    .sort((a, b) => b.value - a.value)
+  const thinnestRecipeCategory = [...recipeCategoryItems].sort((a, b) => a.value - b.value)[0]
+  const thickestRecipeCategory = recipeCategoryItems[0]
 
   const avgSession =
     sessions.avgDurationSeconds != null
       ? formatDuration(Math.round(sessions.avgDurationSeconds))
       : '—'
+  const finishRate = sessions.total > 0 ? Math.round((sessions.completed / sessions.total) * 100) : 0
+
+  const itemsLive = workouts.published + recipes.published
+  const newContentThisWeek = growth.last7Days.workoutsCreated + growth.last7Days.recipesCreated
+
+  const proPct = users.total > 0 ? Math.round((users.pro / users.total) * 100) : 0
+
+  const scheduledCount = workouts.scheduled + recipes.scheduled
+  const workoutImagesCovered = workouts.total - workouts.missingImage
+  const recipeImagesCovered = recipes.total - recipes.missingImage
+  const gapCount =
+    (workoutImagesCovered < workouts.total ? 1 : 0) +
+    (recipeImagesCovered < recipes.total ? 1 : 0) +
+    (scheduledCount === 0 ? 1 : 0)
+
+  const costPerRun = gigiUsage.total > 0 ? gigiUsage.estimatedCostUsd / gigiUsage.total : 0
 
   return (
     <div>
@@ -95,37 +115,63 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Top stat row */}
+      {/* Row 1 — KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Users"
+        <KpiCard
+          label="Items live in the app"
+          value={itemsLive.toLocaleString()}
+          icon={<LayersIcon />}
+          delta={plusDelta(newContentThisWeek, 'items')}
+          footer={
+            <>
+              {workouts.published} workouts · {recipes.published} recipes
+            </>
+          }
+        />
+        <KpiCard
+          label="Registered users"
           value={users.total.toLocaleString()}
           icon={<UsersIcon />}
           delta={plusDelta(growth.last7Days.signups, 'signups')}
-          spark={[growth.last30Days.signups, growth.last7Days.signups]}
-        />
-        <StatCard
-          label="Workouts"
-          value={workouts.total.toLocaleString()}
-          icon={<DumbbellIcon />}
-          delta={plusDelta(growth.last7Days.workoutsCreated, 'workouts')}
-          spark={[
-            growth.last30Days.workoutsCreated,
-            growth.last7Days.workoutsCreated,
-          ]}
-        />
-        <StatCard
-          label="Sessions done"
+        >
+          <div className="mt-3">
+            <ProgressBar value={users.pro} total={users.total} color="#E58AA1" />
+            <p className="text-xs text-ink-500 mt-1.5">
+              {users.pro} Pro · {proPct}%
+            </p>
+          </div>
+        </KpiCard>
+        <KpiCard
+          label="Sessions completed"
           value={sessions.completed.toLocaleString()}
           icon={<CheckIcon />}
           delta={plusDelta(growth.last7Days.sessions, 'sessions')}
-          spark={[growth.last30Days.sessions, growth.last7Days.sessions]}
+          footer={
+            <>
+              {finishRate}% finish rate · {avgSession} avg
+            </>
+          }
         />
-        <StatCard
-          label="Time trained"
-          value={formatDuration(sessions.totalDurationSeconds)}
-          icon={<ClockIcon />}
-          delta={{ text: `${avgSession} avg / session`, positive: true }}
+        <KpiCard
+          label="Gigi spend, all time"
+          value={formatUsd(gigiUsage.estimatedCostUsd)}
+          icon={<SparkIcon />}
+          footer={
+            <>
+              {gigiUsage.total} runs · {formatUsd(costPerRun)}/run ·{' '}
+              <span className="font-mono">{GIGI_PRICING.model}</span>
+            </>
+          }
+        />
+      </div>
+
+      {/* Row 2 — Content health */}
+      <div className="mb-6">
+        <ContentHealthPanel
+          workoutImages={{ covered: workoutImagesCovered, total: workouts.total }}
+          recipeImages={{ covered: recipeImagesCovered, total: recipes.total }}
+          scheduledCount={scheduledCount}
+          gapCount={gapCount}
         />
       </div>
 
@@ -174,46 +220,70 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Breakdowns */}
+      {/* Row 3 — Breakdowns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card title="Workouts by format">
-          {workouts.total > 0 ? (
-            <div className="flex items-center gap-6">
-              <Donut
-                segments={formatSegments}
-                centerValue={workouts.total.toLocaleString()}
-                centerLabel="total"
-              />
-              <Legend items={formatSegments.filter((s) => s.value > 0)} />
-            </div>
+          {workouts.byFormat && Object.values(workouts.byFormat).some((v) => v > 0) ? (
+            <>
+              <div className="flex items-center gap-6">
+                <Donut
+                  segments={formatSegments}
+                  centerValue={formatSegments.reduce((s, f) => s + f.value, 0).toLocaleString()}
+                  centerLabel="total"
+                />
+                <Legend items={formatSegments.filter((s) => s.value > 0)} />
+              </div>
+            </>
           ) : (
             <EmptyNote>No workouts yet.</EmptyNote>
           )}
         </Card>
 
-        <Card title="Workouts by category">
-          {workouts.total > 0 ? (
-            <BreakdownBars items={categoryItems} />
+        <Card title="Exercise library">
+          {exercises.total > 0 ? (
+            <>
+              <BreakdownBars items={exerciseItems.filter((i) => i.value > 0)} />
+              {deepestExerciseCategory && (
+                <CardTakeaway>
+                  {exercises.total} total ·{' '}
+                  <span className="font-medium text-ink-900">{deepestExerciseCategory.label}</span>{' '}
+                  is the deepest at {deepestExerciseCategory.value}
+                </CardTakeaway>
+              )}
+            </>
           ) : (
-            <EmptyNote>No workouts yet.</EmptyNote>
+            <EmptyNote>No exercises yet.</EmptyNote>
           )}
         </Card>
 
-        <Card
-          title="Content source"
-          action={
-            <span className="inline-flex items-center gap-1.5 text-xs text-ink-500">
-              <span className="text-blush-600">
-                <SparkIcon />
-              </span>
-              {gigiUsage.total} Gigi run{gigiUsage.total === 1 ? '' : 's'}
-            </span>
-          }
-        >
-          {workouts.total > 0 ? (
-            <BreakdownBars items={sourceItems} />
+        <Card title="Recipes by category">
+          {recipes.total > 0 ? (
+            <>
+              <BreakdownBars items={recipeCategoryItems} />
+              <div className="mt-4 pt-4 border-t border-line-divider">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-ink-500 mb-2">
+                  Dietary coverage
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(recipes.dietaryTagCounts).map(([tag, count]) => (
+                    <span
+                      key={tag}
+                      className="rounded-pill bg-surface-warm px-2.5 py-1 text-xs text-ink-700"
+                    >
+                      {tag} {count}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {thinnestRecipeCategory && thickestRecipeCategory && (
+                <CardTakeaway>
+                  <span className="font-medium text-ink-900">{thinnestRecipeCategory.label}</span> is
+                  thin — {thinnestRecipeCategory.value} vs {thickestRecipeCategory.value}
+                </CardTakeaway>
+              )}
+            </>
           ) : (
-            <EmptyNote>No workouts yet.</EmptyNote>
+            <EmptyNote>No recipes yet.</EmptyNote>
           )}
         </Card>
       </div>
@@ -253,7 +323,7 @@ export default async function DashboardPage() {
                   value={gigiUsage.outputTokens.toLocaleString()}
                 />
               </dl>
-              <p className="text-[11px] text-ink-300 leading-relaxed">
+              <p className="text-[11px] text-ink-400 leading-relaxed">
                 Estimated from logged tokens at ${GIGI_PRICING.inputPerM}/M input · $
                 {GIGI_PRICING.outputPerM}/M output. Runs before token logging was
                 added count as runs but $0 cost.
@@ -278,7 +348,7 @@ function MiniStat({
   accent?: boolean
 }) {
   return (
-    <div className="rounded-card bg-blush-50 p-4">
+    <div className={`rounded-card p-4 ${accent ? 'bg-blush-50' : 'bg-surface-warm'}`}>
       <div className="text-[11px] font-medium uppercase tracking-wide text-ink-500">
         {label}
       </div>

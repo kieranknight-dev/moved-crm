@@ -1,5 +1,13 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { WorkoutCategory, WorkoutFormat, WorkoutSource } from '@/lib/types'
+import type {
+  WorkoutCategory,
+  WorkoutFormat,
+  WorkoutSource,
+  RecipeCategory,
+  ExerciseCategory,
+  DietaryTag,
+} from '@/lib/types'
+import { RECIPE_CATEGORIES, EXERCISE_CATEGORY_VALUES, DIETARY_TAGS } from '@/lib/types'
 
 // All workout source/category/format values the schema currently allows.
 // Kept in one place so the breakdown queries and the returned object shape
@@ -36,6 +44,8 @@ const WORKOUT_FORMATS: readonly DashboardWorkoutFormat[] = [
   'Mobility',
 ]
 
+const RECIPE_CATEGORY_VALUES: readonly RecipeCategory[] = RECIPE_CATEGORIES.map((c) => c.value)
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 // Gigi (the AI generator) runs on Anthropic's claude-sonnet-4-6. Pricing is
@@ -54,16 +64,31 @@ function gigiCostUsd(inputTokens: number, outputTokens: number): number {
   )
 }
 
+interface ContentStats {
+  total: number
+  published: number
+  archived: number
+  scheduled: number
+  missingImage: number
+}
+
 export interface DashboardStats {
   users: {
     total: number
     pro: number
   }
-  workouts: {
-    total: number
+  workouts: ContentStats & {
     bySource: Record<WorkoutSource, number>
     byCategory: Record<WorkoutCategory, number>
     byFormat: Record<DashboardWorkoutFormat, number>
+  }
+  recipes: ContentStats & {
+    byCategory: Record<RecipeCategory, number>
+    dietaryTagCounts: Record<DietaryTag, number>
+  }
+  exercises: {
+    total: number
+    byCategory: Record<ExerciseCategory, number>
   }
   sessions: {
     total: number
@@ -85,20 +110,24 @@ export interface DashboardStats {
     last7Days: {
       signups: number
       workoutsCreated: number
+      recipesCreated: number
       sessions: number
     }
     last30Days: {
       signups: number
       workoutsCreated: number
+      recipesCreated: number
       sessions: number
     }
   }
 }
 
+type CountableTable = 'profiles' | 'workouts' | 'recipes' | 'exercises' | 'workout_history' | 'gigi_usage'
+
 // Cheap `head: true` count query — fetches zero rows, only the exact count.
 async function exactCount(
   admin: ReturnType<typeof createAdminClient>,
-  table: 'profiles' | 'workouts' | 'workout_history' | 'gigi_usage',
+  table: CountableTable,
   apply?: (
     query: ReturnType<ReturnType<typeof createAdminClient>['from']>
   ) => ReturnType<ReturnType<typeof createAdminClient>['from']>
@@ -114,6 +143,28 @@ async function exactCount(
     throw new Error(`Failed to count ${table}: ${error.message}`)
   }
   return count ?? 0
+}
+
+// Shared status/image-coverage stats for workouts and recipes — same four
+// lifecycle states (see WorkoutStatus/RecipeStatus), same "missing image"
+// content-health signal (image_ref / image_url).
+async function contentStats(
+  admin: ReturnType<typeof createAdminClient>,
+  table: 'workouts' | 'recipes',
+  imageColumn: 'image_ref' | 'image_url',
+  extra?: (q: ReturnType<ReturnType<typeof createAdminClient>['from']>) => ReturnType<ReturnType<typeof createAdminClient>['from']>
+): Promise<ContentStats> {
+  const base = extra ?? ((q: ReturnType<ReturnType<typeof createAdminClient>['from']>) => q)
+  const [total, published, archived, scheduled, missingImage] = await Promise.all([
+    exactCount(admin, table, base),
+    exactCount(admin, table, (q) => base(q).eq('status', 'published')),
+    exactCount(admin, table, (q) => base(q).eq('status', 'archived')),
+    exactCount(admin, table, (q) => base(q).eq('status', 'scheduled')),
+    exactCount(admin, table, (q) =>
+      base(q).or(`${imageColumn}.is.null,${imageColumn}.eq.`)
+    ),
+  ])
+  return { total, published, archived, scheduled, missingImage }
 }
 
 /**
@@ -132,10 +183,15 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const [
     totalUsers,
     proUsers,
-    totalWorkouts,
+    workoutStats,
+    recipeStats,
     workoutsBySource,
     workoutsByCategory,
     workoutsByFormat,
+    recipesByCategory,
+    dietaryTagCounts,
+    totalExercises,
+    exercisesByCategory,
     totalSessions,
     completedSessions,
     gigiRows,
@@ -143,13 +199,16 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     signups30d,
     workoutsCreated7d,
     workoutsCreated30d,
+    recipesCreated7d,
+    recipesCreated30d,
     sessions7d,
     sessions30d,
     completedDurations,
   ] = await Promise.all([
     exactCount(admin, 'profiles'),
     exactCount(admin, 'profiles', (q) => q.eq('is_pro', true)),
-    exactCount(admin, 'workouts'),
+    contentStats(admin, 'workouts', 'image_ref', (q) => q.eq('source', 'coach')),
+    contentStats(admin, 'recipes', 'image_url'),
     Promise.all(
       WORKOUT_SOURCES.map((source) =>
         exactCount(admin, 'workouts', (q) => q.eq('source', source))
@@ -165,6 +224,20 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         exactCount(admin, 'workouts', (q) => q.eq('format', format))
       )
     ),
+    Promise.all(
+      RECIPE_CATEGORY_VALUES.map((category) =>
+        exactCount(admin, 'recipes', (q) => q.eq('category', category))
+      )
+    ),
+    Promise.all(
+      DIETARY_TAGS.map((tag) => exactCount(admin, 'recipes', (q) => q.contains('dietary_tags', [tag])))
+    ),
+    exactCount(admin, 'exercises'),
+    Promise.all(
+      EXERCISE_CATEGORY_VALUES.map((category) =>
+        exactCount(admin, 'exercises', (q) => q.eq('category', category))
+      )
+    ),
     exactCount(admin, 'workout_history'),
     exactCount(admin, 'workout_history', (q) => q.not('completed_at', 'is', null)),
     // All Gigi events with tokens, aggregated below. Low-volume admin table,
@@ -174,6 +247,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     exactCount(admin, 'profiles', (q) => q.gte('created_at', thirtyDaysAgo)),
     exactCount(admin, 'workouts', (q) => q.gte('created_at', sevenDaysAgo)),
     exactCount(admin, 'workouts', (q) => q.gte('created_at', thirtyDaysAgo)),
+    exactCount(admin, 'recipes', (q) => q.gte('created_at', sevenDaysAgo)),
+    exactCount(admin, 'recipes', (q) => q.gte('created_at', thirtyDaysAgo)),
     exactCount(admin, 'workout_history', (q) => q.gte('created_at', sevenDaysAgo)),
     exactCount(admin, 'workout_history', (q) => q.gte('created_at', thirtyDaysAgo)),
     admin
@@ -231,7 +306,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       pro: proUsers,
     },
     workouts: {
-      total: totalWorkouts,
+      ...workoutStats,
       bySource: Object.fromEntries(
         WORKOUT_SOURCES.map((source, i) => [source, workoutsBySource[i]])
       ) as Record<WorkoutSource, number>,
@@ -241,6 +316,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       byFormat: Object.fromEntries(
         WORKOUT_FORMATS.map((format, i) => [format, workoutsByFormat[i]])
       ) as Record<DashboardWorkoutFormat, number>,
+    },
+    recipes: {
+      ...recipeStats,
+      byCategory: Object.fromEntries(
+        RECIPE_CATEGORY_VALUES.map((category, i) => [category, recipesByCategory[i]])
+      ) as Record<RecipeCategory, number>,
+      dietaryTagCounts: Object.fromEntries(
+        DIETARY_TAGS.map((tag, i) => [tag, dietaryTagCounts[i]])
+      ) as Record<DietaryTag, number>,
+    },
+    exercises: {
+      total: totalExercises,
+      byCategory: Object.fromEntries(
+        EXERCISE_CATEGORY_VALUES.map((category, i) => [category, exercisesByCategory[i]])
+      ) as Record<ExerciseCategory, number>,
     },
     sessions: {
       total: totalSessions,
@@ -265,11 +355,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       last7Days: {
         signups: signups7d,
         workoutsCreated: workoutsCreated7d,
+        recipesCreated: recipesCreated7d,
         sessions: sessions7d,
       },
       last30Days: {
         signups: signups30d,
         workoutsCreated: workoutsCreated30d,
+        recipesCreated: recipesCreated30d,
         sessions: sessions30d,
       },
     },
