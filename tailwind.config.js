@@ -36,6 +36,7 @@ module.exports = {
           900: '#1A1714', // ink — headlines / body-primary (exact)
           700: '#6F665E', // icon.secondary (exact)
           500: '#8A827A', // text.secondary — subtitles/body-secondary (exact)
+          400: '#A89E96', // text.muted — hints, archived text (exact)
           300: '#C6BDB2', // text.ghost — faintest placeholder tone (exact)
         },
         // Redesign (2026-08): warm-neutral surfaces/borders. Blush is now
