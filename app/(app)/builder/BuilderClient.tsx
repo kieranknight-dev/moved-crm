@@ -63,6 +63,18 @@ function autoEquipmentFor(names: string[], catalog: PickerExercise[]): string {
   return ''
 }
 
+// EMOM's "rounds" are minutes — everywhere the shared grouped-round UI
+// (CustomRoundsSection et al.) needs a noun, it reads it from here rather
+// than hardcoding "round", so EMOM/Circuit/Tabata/AMRAP all label correctly
+// without diverging copies of the same component.
+function roundNoun(format: BuilderState['format']): 'minute' | 'round' {
+  return format === 'EMOM' ? 'minute' : 'round'
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
 export interface BuilderInit {
   workoutId: string
   state: BuilderState
@@ -140,7 +152,11 @@ export default function BuilderClient({
   const set = <K extends keyof BuilderState>(key: K, value: BuilderState[K]) =>
     setState((s) => ({ ...s, [key]: value }))
 
-  const isRoundsMode = state.format === 'Circuit' || state.format === 'Tabata'
+  const isRoundsMode =
+    state.format === 'Circuit' ||
+    state.format === 'Tabata' ||
+    state.format === 'EMOM' ||
+    state.format === 'AMRAP'
   const inCustomRounds = state.isCustomRounds && isRoundsMode
 
   // --- exercise mutations ---
@@ -193,9 +209,14 @@ export default function BuilderClient({
   const hasDiscardableRounds = state.exercises.some((e) => (e.roundIndex ?? 1) > 1)
 
   const onRoundsModeChange = (custom: boolean) => {
+    const noun = roundNoun(state.format)
     if (custom) enableCustomRounds()
     else if (hasDiscardableRounds) {
-      if (confirm('Switching to “Same every round” keeps Round 1’s exercises and discards the rest.'))
+      if (
+        confirm(
+          `Switching to “Same every ${noun}” keeps ${capitalize(noun)} 1’s exercises and discards the rest.`
+        )
+      )
         disableCustomRounds()
     } else disableCustomRounds()
   }
@@ -453,19 +474,33 @@ function FormatSettings({
 
   if (state.format === 'AMRAP') {
     return (
-      <SettingCard>
-        <Label>Time cap</Label>
-        <Stepper value={state.amrapCapMinutes} min={1} max={60} onChange={(v) => set('amrapCapMinutes', v)} />
-      </SettingCard>
+      <div className="space-y-3">
+        <Segmented
+          options={['Same every round', 'Custom rounds']}
+          index={state.isCustomRounds ? 1 : 0}
+          onChange={(i) => onRoundsModeChange(i === 1)}
+        />
+        <SettingCard>
+          <Label>Time cap</Label>
+          <Stepper value={state.amrapCapMinutes} min={1} max={60} onChange={(v) => set('amrapCapMinutes', v)} />
+        </SettingCard>
+      </div>
     )
   }
 
   if (state.format === 'EMOM') {
     return (
-      <SettingCard>
-        <Label>Minutes</Label>
-        <Stepper value={state.emomMinutes} min={1} max={60} onChange={(v) => set('emomMinutes', v)} />
-      </SettingCard>
+      <div className="space-y-3">
+        <Segmented
+          options={['Same every minute', 'Custom minutes']}
+          index={state.isCustomRounds ? 1 : 0}
+          onChange={(i) => onRoundsModeChange(i === 1)}
+        />
+        <SettingCard>
+          <Label>Minutes</Label>
+          <Stepper value={state.emomMinutes} min={1} max={60} onChange={(v) => set('emomMinutes', v)} />
+        </SettingCard>
+      </div>
     )
   }
 
@@ -564,18 +599,25 @@ function CustomRoundsSection(
 ) {
   const { state } = props
   const rounds = Array.from({ length: Math.max(1, state.customRoundCount) }, (_, i) => i + 1)
+  const noun = roundNoun(state.format)
+  // Repeating a round N times only makes sense for Circuit/Tabata's
+  // fixed-round-count model — EMOM's minutes and AMRAP's rounds each happen
+  // exactly once, so there's nothing to repeat.
+  const hasRepeatCount = state.format === 'Circuit' || state.format === 'Tabata'
   return (
     <div>
       {rounds.map((round) => (
         <div key={round} className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-medium uppercase tracking-wider text-blush-600">
-              Round {round}
+              {capitalize(noun)} {round}
             </span>
-            <RoundRepeatStepper
-              count={repeatCountFor(state, round)}
-              onChange={(v) => props.setRoundRepeat(round, v)}
-            />
+            {hasRepeatCount && (
+              <RoundRepeatStepper
+                count={repeatCountFor(state, round)}
+                onChange={(v) => props.setRoundRepeat(round, v)}
+              />
+            )}
           </div>
           <div className="space-y-2">
             {state.exercises
@@ -584,14 +626,14 @@ function CustomRoundsSection(
                 <ExerciseRow key={ex.id} ex={ex} {...props} />
               ))}
             <AddRow
-              label={`+ Add to round ${round}`}
+              label={`+ Add to ${noun} ${round}`}
               onClick={() => props.openPickerToAdd(round)}
               dashed
             />
           </div>
         </div>
       ))}
-      <AddRow label="+ Add round" onClick={props.addRound} />
+      <AddRow label={`+ Add ${noun}`} onClick={props.addRound} />
     </div>
   )
 }

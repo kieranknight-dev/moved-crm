@@ -242,6 +242,11 @@ function maxRoundIndex(exercises: BuilderExercise[]): number {
 }
 
 export function roundCountFor(state: BuilderState): number {
+  if (state.format === 'EMOM' || state.format === 'AMRAP') {
+    // No repeat-count concept for these — a round/minute happens exactly
+    // once, so the physical count is just however many were authored.
+    return state.isCustomRounds ? physicalRoundCount(state) : 1
+  }
   if (state.format !== 'Circuit' && state.format !== 'Tabata') return 1
   return state.isCustomRounds ? physicalRoundCount(state) : state.rounds
 }
@@ -442,7 +447,11 @@ export function resolvePublish(
 
 export function buildInsert(state: BuilderState, publish: PublishIntent): WorkoutInsert {
   const isCustomRoundsFormat =
-    state.isCustomRounds && (state.format === 'Circuit' || state.format === 'Tabata')
+    state.isCustomRounds &&
+    (state.format === 'Circuit' ||
+      state.format === 'Tabata' ||
+      state.format === 'EMOM' ||
+      state.format === 'AMRAP')
 
   const valid = state.exercises.filter((ex) => ex.name.trim().length > 0)
 
@@ -456,11 +465,11 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
       payload.sets = ex.sets
       payload.rest_after_sets_seconds = ex.restSeconds
     }
-    if (state.format === 'Circuit') {
-      // Structured fields are the source of truth for Circuit going forward
-      // (detail above is only a derived projection for legacy/back-compat
-      // readers). No per-exercise rest input exists in the builder yet, so
-      // rest_seconds stays unset — a future feature's natural home.
+    if (state.format === 'Circuit' || state.format === 'EMOM' || state.format === 'AMRAP') {
+      // Structured fields are the source of truth going forward (detail
+      // above is only a derived projection for legacy/back-compat readers).
+      // No per-exercise rest input exists in the builder yet, so rest_seconds
+      // stays unset — a future feature's natural home.
       const sv = structuredValue(ex)
       payload.value = sv.value
       payload.unit = sv.unit
@@ -593,15 +602,18 @@ type WorkoutForEdit = Pick<
 export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
   const format = w.format as WorkoutFormat
   const raw = Array.isArray(w.exercises) ? (w.exercises as Record<string, unknown>[]) : []
-  const isRoundsFmt = format === 'Circuit' || format === 'Tabata'
+  const isRoundsFmt =
+    format === 'Circuit' || format === 'Tabata' || format === 'EMOM' || format === 'AMRAP'
   const isCustomRounds = isRoundsFmt && raw.some((e) => typeof e?.round_index === 'number')
 
   const rawExercises: BuilderExercise[] = raw.map((e) => {
-    // Circuit: prefer the structured fields (source of truth) over reparsing
-    // detail text — falls back to detail-parsing only for rows saved before
-    // the 2026-07-23 migration, which never got value/unit backfilled.
+    // Circuit/EMOM/AMRAP: prefer the structured fields (source of truth) over
+    // reparsing detail text — falls back to detail-parsing only for rows
+    // saved before the structured value/unit fields existed.
     const structured =
-      format === 'Circuit' && typeof e?.value === 'number' && typeof e?.unit === 'string'
+      (format === 'Circuit' || format === 'EMOM' || format === 'AMRAP') &&
+      typeof e?.value === 'number' &&
+      typeof e?.unit === 'string'
         ? (e.unit === 'seconds'
             ? { isTimed: true, reps: 10, seconds: e.value, unit: 'reps' as const }
             : { isTimed: false, reps: e.value, seconds: 30, unit: e.unit as ExerciseUnit })
