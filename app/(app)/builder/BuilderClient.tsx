@@ -31,6 +31,7 @@ import { createClient } from '@/lib/supabase/client'
 import { createCoachWorkout, updateCoachWorkout } from './actions'
 import { ExercisePicker, type PickerExercise } from './ExercisePicker'
 import { PublishPanel } from '@/components/PublishPanel'
+import { BuilderShell, FormCard, SummaryCard, SummaryRow, WarningStrip } from '@/components/BuilderLayout'
 
 // Meaningful-first order for the auto-detected equipment summary — bodyweight
 // and "other" are dropped unless they're the only thing present (see
@@ -249,99 +250,138 @@ export default function BuilderClient({
           ? 'Schedule workout'
           : `Publish now${validCount > 0 ? ` · ${effectiveDuration(state)} min` : ''}`
 
+  const totalSets =
+    state.format === 'Rounds'
+      ? state.exercises.reduce((s, e) => s + (e.name.trim() ? e.sets : 0), 0)
+      : null
+
   return (
-    <div className="max-w-2xl pb-32">
+    <div className="pb-10">
       <h1 className="font-display text-2xl text-ink-900 mb-6">
         {isEditing ? 'Edit workout' : 'New workout'}
       </h1>
 
-      {/* Name */}
-      <input
-        type="text"
-        value={state.workoutName}
-        onChange={(e) => set('workoutName', e.target.value)}
-        placeholder="Workout name"
-        className="w-full font-display text-2xl text-ink-900 placeholder:text-ink-300 border-b-2 border-blush-100 pb-2 mb-6 outline-none focus:border-blush-500 transition-colors"
+      <BuilderShell
+        form={
+          <div className="space-y-6">
+            <FormCard title="Basics">
+              {/* Name */}
+              <div className="mb-5">
+                <SubLabel>Workout name</SubLabel>
+                <input
+                  type="text"
+                  value={state.workoutName}
+                  onChange={(e) => set('workoutName', e.target.value)}
+                  placeholder="e.g. Full Body Strength"
+                  className="w-full rounded-xl border border-line-input bg-surface-input px-4 py-3 font-display text-[22px] font-semibold text-ink-900 placeholder:text-ink-400 placeholder:font-body placeholder:text-sm outline-none focus:border-blush-500 focus:ring-[3px] focus:ring-blush-500/15 transition-colors"
+                />
+              </div>
+
+              {/* Format chips */}
+              <SubLabel>Format</SubLabel>
+              <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1 mb-1">
+                {BUILDER_FORMAT_ORDER.map((f) => (
+                  <Chip key={f} active={state.format === f} onClick={() => set('format', f)}>
+                    {FORMAT_CHIP_LABEL[f]}
+                  </Chip>
+                ))}
+              </div>
+              <p className="text-xs text-ink-500 mb-5">{FORMAT_DESCRIPTION[state.format]}</p>
+
+              {/* Format settings */}
+              <FormatSettings state={state} set={set} onRoundsModeChange={onRoundsModeChange} />
+
+              {/* Estimated time override */}
+              <div className="mt-3">
+                <DurationOverride state={state} set={set} />
+              </div>
+            </FormCard>
+
+            <FormCard
+              title={state.format === 'Rounds' ? 'Exercises' : 'Each round'}
+              action={
+                <span className="font-display text-xs text-blush-600 tabular-nums">
+                  {liveSummaryText(state)}
+                </span>
+              }
+            >
+              {inCustomRounds ? (
+                <CustomRoundsSection
+                  state={state}
+                  expandedId={expandedId}
+                  setExpandedId={setExpandedId}
+                  patchExercise={patchExercise}
+                  removeExercise={removeExercise}
+                  openPickerToAdd={openPickerToAdd}
+                  openPickerToRename={openPickerToRename}
+                  setRoundRepeat={setRoundRepeat}
+                  addRound={addRound}
+                  catalog={exercises}
+                />
+              ) : (
+                <UniformSection
+                  state={state}
+                  expandedId={expandedId}
+                  setExpandedId={setExpandedId}
+                  patchExercise={patchExercise}
+                  removeExercise={removeExercise}
+                  openPickerToAdd={openPickerToAdd}
+                  openPickerToRename={openPickerToRename}
+                  catalog={exercises}
+                />
+              )}
+            </FormCard>
+
+            <FormCard title="Coach details">
+              <CoachDetails
+                state={state}
+                set={set}
+                onEquipmentEdited={() => setEquipmentTouched(true)}
+                uploadingImage={uploadingImage}
+                imageError={imageError}
+                onImageChange={onImageChange}
+              />
+            </FormCard>
+          </div>
+        }
+        sidebar={
+          <>
+            <PublishPanel
+              mode={publishMode}
+              setMode={setPublishMode}
+              scheduledLocal={scheduledLocal}
+              setScheduledLocal={setScheduledLocal}
+              status={
+                <span className="rounded-pill bg-surface-warm px-2.5 py-1 text-[11px] font-medium text-ink-500">
+                  {isEditing ? 'Editing' : 'New'}
+                </span>
+              }
+            >
+              {error && (
+                <p className="mt-4 text-sm text-error-text bg-error-tint border border-error-border rounded-card px-4 py-3">
+                  {error}
+                </p>
+              )}
+              <button
+                onClick={onSave}
+                disabled={saving || expandedId !== null || validCount === 0}
+                className="mt-4 w-full rounded-pill bg-blush-500 text-white py-3 text-sm font-medium shadow-cta hover:shadow-cardHover transition-shadow disabled:opacity-50"
+              >
+                {saveLabel}
+              </button>
+            </PublishPanel>
+
+            <SummaryCard>
+              <SummaryRow label="Format" value={FORMAT_CHIP_LABEL[state.format]} />
+              <SummaryRow label="Exercises" value={validCount} />
+              {totalSets !== null && <SummaryRow label="Total sets" value={totalSets} />}
+              <SummaryRow label="Est. duration" value={`~${effectiveDuration(state)} min`} />
+              <SummaryRow label="Equipment" value={state.equipment || '—'} />
+            </SummaryCard>
+            {!state.imageRef && <WarningStrip>No image set for this workout.</WarningStrip>}
+          </>
+        }
       />
-
-      {/* Format chips */}
-      <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1">
-        {BUILDER_FORMAT_ORDER.map((f) => (
-          <Chip key={f} active={state.format === f} onClick={() => set('format', f)}>
-            {FORMAT_CHIP_LABEL[f]}
-          </Chip>
-        ))}
-      </div>
-      <p className="text-xs text-ink-500 mt-2 mb-4">{FORMAT_DESCRIPTION[state.format]}</p>
-
-      {/* Format settings */}
-      <FormatSettings state={state} set={set} onRoundsModeChange={onRoundsModeChange} />
-
-      {/* Estimated time override */}
-      <DurationOverride state={state} set={set} />
-
-      {/* Exercises */}
-      <div className="mt-6">
-        {inCustomRounds ? (
-          <CustomRoundsSection
-            state={state}
-            expandedId={expandedId}
-            setExpandedId={setExpandedId}
-            patchExercise={patchExercise}
-            removeExercise={removeExercise}
-            openPickerToAdd={openPickerToAdd}
-            openPickerToRename={openPickerToRename}
-            setRoundRepeat={setRoundRepeat}
-            addRound={addRound}
-          />
-        ) : (
-          <UniformSection
-            state={state}
-            expandedId={expandedId}
-            setExpandedId={setExpandedId}
-            patchExercise={patchExercise}
-            removeExercise={removeExercise}
-            openPickerToAdd={openPickerToAdd}
-            openPickerToRename={openPickerToRename}
-          />
-        )}
-      </div>
-
-      {/* Coach details */}
-      <CoachDetails
-        state={state}
-        set={set}
-        onEquipmentEdited={() => setEquipmentTouched(true)}
-        uploadingImage={uploadingImage}
-        imageError={imageError}
-        onImageChange={onImageChange}
-      />
-
-      {/* Publish */}
-      <PublishPanel
-        mode={publishMode}
-        setMode={setPublishMode}
-        scheduledLocal={scheduledLocal}
-        setScheduledLocal={setScheduledLocal}
-      />
-
-      {/* Save */}
-      {error && (
-        <p className="mt-6 text-sm text-blush-700 bg-blush-50 border border-blush-100 rounded-card px-4 py-3">
-          {error}
-        </p>
-      )}
-      <div className="fixed bottom-0 left-0 right-0 md:left-56 bg-gradient-to-t from-white via-white to-transparent p-6 pt-10">
-        <div className="max-w-2xl">
-          <button
-            onClick={onSave}
-            disabled={saving || expandedId !== null || validCount === 0}
-            className="w-full rounded-pill bg-blush-500 text-white py-3.5 text-sm font-medium shadow-cta hover:shadow-cardHover transition-shadow disabled:opacity-50"
-          >
-            {saveLabel}
-          </button>
-        </div>
-      </div>
 
       {picker.open && (
         <ExercisePicker
@@ -501,24 +541,17 @@ interface ExerciseSectionProps {
   removeExercise: (id: string) => void
   openPickerToAdd: (round: number | null) => void
   openPickerToRename: (id: string) => void
+  catalog: PickerExercise[]
 }
 
 function UniformSection(props: ExerciseSectionProps) {
   const { state } = props
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <Label>{state.format === 'Rounds' ? 'Exercises' : 'Each round'}</Label>
-        <span className="font-display text-xs text-blush-600 tabular-nums">
-          {liveSummaryText(state)}
-        </span>
-      </div>
-      <div className="space-y-2">
-        {state.exercises.map((ex) => (
-          <ExerciseRow key={ex.id} ex={ex} {...props} />
-        ))}
-        <AddRow label="+ Add exercise" onClick={() => props.openPickerToAdd(null)} dashed />
-      </div>
+    <div className="space-y-2">
+      {state.exercises.map((ex) => (
+        <ExerciseRow key={ex.id} ex={ex} {...props} />
+      ))}
+      <AddRow label="+ Add exercise" onClick={() => props.openPickerToAdd(null)} dashed />
     </div>
   )
 }
@@ -571,6 +604,7 @@ function ExerciseRow({
   patchExercise,
   removeExercise,
   openPickerToRename,
+  catalog,
 }: { ex: BuilderExercise } & ExerciseSectionProps) {
   if (expandedId === ex.id) {
     return (
@@ -584,23 +618,38 @@ function ExerciseRow({
       />
     )
   }
-  const index = state.exercises.findIndex((e) => e.id === ex.id) + 1
+  const catalogEntry = catalog.find((c) => c.name.toLowerCase() === ex.name.trim().toLowerCase())
+  const meta = catalogEntry
+    ? [catalogEntry.category, catalogEntry.bodyPart].filter(Boolean).join(' · ')
+    : null
   return (
     <button
       onClick={() => setExpandedId(ex.id)}
-      className="w-full text-left rounded-card border border-blush-100 bg-white px-4 py-3.5 hover:border-blush-200 transition-colors"
+      className="w-full text-left rounded-card border border-line-card bg-white px-4 py-3.5 hover:border-blush-200 hover:bg-surface-header transition-colors"
     >
       <div className="flex items-center gap-3">
-        <span className="w-5 text-center text-xs font-medium text-ink-300">{index}</span>
-        <span className="font-display text-[15px] text-ink-900 flex-1 truncate">
-          {ex.name || 'Exercise'}
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-surface-warm text-ink-400">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none" />
+            <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" />
+            <circle cx="9" cy="18" r="1" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="6" r="1" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" />
+            <circle cx="15" cy="18" r="1" fill="currentColor" stroke="none" />
+          </svg>
         </span>
-        <span className="rounded-pill bg-blush-50 px-3 py-1 text-xs font-medium text-ink-900 tabular-nums">
+        <div className="flex-1 min-w-0">
+          <span className="block font-display text-[15px] text-ink-900 truncate">
+            {ex.name || 'Exercise'}
+          </span>
+          {meta && <span className="block text-xs text-ink-500 truncate mt-0.5">{meta}</span>}
+        </div>
+        <span className="rounded-pill bg-surface-warm px-3 py-1 text-xs font-medium text-ink-900 tabular-nums shrink-0">
           {quantityPillText(state, ex)}
         </span>
       </div>
       {state.format === 'Rounds' && (
-        <div className="mt-1.5 pl-8 text-xs text-ink-500 tabular-nums">
+        <div className="mt-1.5 pl-12 text-xs text-ink-500 tabular-nums">
           Rest {formatRowDuration(ex.restSeconds)} between sets
         </div>
       )}
@@ -627,23 +676,23 @@ function ExerciseEditCard({
   const disabledBig = state.format === 'Tabata'
 
   return (
-    <div className="rounded-card bg-blush-50 p-4 space-y-4">
+    <div className="rounded-card bg-surface-warm p-4 space-y-4">
       <div className="flex items-center gap-3">
-        <span className="h-2.5 w-2.5 rounded-pill bg-blush-600 shrink-0" />
+        <span className="h-2.5 w-2.5 rounded-pill bg-blush-500 shrink-0" />
         <button
           onClick={() => openPickerToRename(ex.id)}
-          className="flex-1 flex items-center justify-between border-b border-blush-600/30 pb-1 text-left"
+          className="flex-1 flex items-center justify-between border-b border-line-input pb-1 text-left"
         >
           <span
-            className={`font-display text-lg truncate ${ex.name ? 'text-ink-900' : 'text-ink-300'}`}
+            className={`font-display text-lg truncate ${ex.name ? 'text-ink-900' : 'text-ink-400'}`}
           >
             {ex.name || 'Choose exercise'}
           </span>
-          <span className="text-blush-600/60 text-sm">›</span>
+          <span className="text-ink-500 text-sm">›</span>
         </button>
         <button
           onClick={() => removeExercise(ex.id)}
-          className="text-blush-600/60 hover:text-blush-700 transition-colors"
+          className="text-ink-500 hover:text-error transition-colors"
           aria-label="Remove exercise"
         >
           🗑
@@ -736,9 +785,7 @@ function CoachDetails({
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }) {
   return (
-    <div className="mt-8 pt-6 border-t border-blush-100 space-y-5">
-      <Label>Coach details</Label>
-
+    <div className="space-y-5">
       <div>
         <SubLabel>Image</SubLabel>
         {state.imageRef ? (
@@ -748,7 +795,7 @@ function CoachDetails({
             className="w-full h-40 object-cover rounded-card mb-2"
           />
         ) : null}
-        <label className="inline-block rounded-pill bg-white border border-blush-100 px-4 py-2 text-sm font-medium text-ink-900 cursor-pointer hover:bg-blush-50 transition-colors">
+        <label className="inline-block rounded-pill bg-white border border-line-input px-4 py-2 text-sm font-medium text-ink-900 cursor-pointer hover:bg-surface-warm transition-colors">
           {uploadingImage ? 'Uploading…' : state.imageRef ? 'Replace image' : 'Upload image'}
           <input
             type="file"
@@ -758,7 +805,7 @@ function CoachDetails({
             className="hidden"
           />
         </label>
-        {imageError && <p className="text-xs text-blush-700 mt-2">{imageError}</p>}
+        {imageError && <p className="text-xs text-error-text mt-2">{imageError}</p>}
       </div>
 
       <div>
@@ -793,7 +840,7 @@ function CoachDetails({
             set('equipment', e.target.value)
           }}
           placeholder="e.g. Dumbbells, Mat"
-          className="w-full rounded-card border border-blush-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-blush-500 transition-colors"
+          className="w-full rounded-xl border border-line-input bg-surface-input px-4 py-2.5 text-sm outline-none focus:border-blush-500 focus:ring-[3px] focus:ring-blush-500/15 transition-colors"
         />
       </div>
 
@@ -804,7 +851,7 @@ function CoachDetails({
           onChange={(e) => set('description', e.target.value)}
           rows={3}
           placeholder="Short description shown in the app."
-          className="w-full rounded-card border border-blush-100 bg-white px-4 py-2.5 text-sm outline-none focus:border-blush-500 transition-colors resize-none"
+          className="w-full rounded-xl border border-line-input bg-surface-input px-4 py-2.5 text-sm outline-none focus:border-blush-500 focus:ring-[3px] focus:ring-blush-500/15 transition-colors resize-none"
         />
       </div>
 
@@ -837,7 +884,7 @@ function SubLabel({ children }: { children: React.ReactNode }) {
 }
 
 function SettingCard({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-card bg-blush-50 p-3.5">{children}</div>
+  return <div className="rounded-card bg-surface-warm p-3.5">{children}</div>
 }
 
 function Chip({
@@ -852,8 +899,10 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-pill px-4 py-2 text-sm font-medium transition-colors ${
-        active ? 'bg-ink-900 text-white' : 'bg-blush-50 text-ink-500 hover:bg-blush-100'
+      className={`shrink-0 rounded-pill px-4 py-2 text-sm font-medium border transition-colors ${
+        active
+          ? 'bg-ink-900 text-white border-ink-900'
+          : 'bg-white text-ink-500 border-line-input hover:bg-surface-warm'
       }`}
     >
       {children}
@@ -881,7 +930,7 @@ function ChipRow({
           key={v}
           onClick={() => onSelect(v)}
           className={`rounded-pill px-2.5 py-1 text-xs font-medium transition-colors ${
-            selected === v ? 'bg-blush-500 text-white' : 'bg-white text-ink-500 hover:bg-blush-100'
+            selected === v ? 'bg-blush-500 text-white' : 'bg-white text-ink-500 hover:bg-surface-warm'
           }`}
         >
           {label(v)}
@@ -904,7 +953,7 @@ function Segmented({
   accent?: boolean
 }) {
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-card bg-blush-50 p-1">
+    <div className="grid grid-cols-2 gap-1 rounded-card bg-surface-warm p-1">
       {options.map((opt, i) => (
         <button
           key={opt}
@@ -1086,8 +1135,8 @@ function AddRow({
       onClick={onClick}
       className={`w-full rounded-card py-3.5 text-sm font-medium text-center transition-colors ${
         dashed
-          ? 'border border-dashed border-blush-200 text-blush-600 hover:bg-blush-50'
-          : 'bg-blush-50 text-ink-900 hover:bg-blush-100'
+          ? 'border border-dashed border-line-input text-blush-600 hover:bg-surface-warm'
+          : 'bg-surface-warm text-ink-900 hover:bg-line-divider'
       }`}
     >
       {label}
@@ -1102,7 +1151,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative h-6 w-10 rounded-pill transition-colors ${checked ? 'bg-blush-500' : 'bg-blush-100'}`}
+      className={`relative h-6 w-10 rounded-pill transition-colors ${checked ? 'bg-blush-500' : 'bg-line-input'}`}
     >
       <span
         className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-pill bg-white shadow-card transition-transform ${
