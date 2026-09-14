@@ -20,6 +20,8 @@ import {
   localInputToIso,
   formatRowDuration,
   repeatCountFor,
+  amrapHasPerRoundCaps,
+  amrapRoundCapMinutesFor,
   UNIT_STEPPER,
   type BuilderState,
   type BuilderExercise,
@@ -229,6 +231,12 @@ export default function BuilderClient({
       roundRepeats: { ...s.roundRepeats, [round]: Math.max(1, count) },
     }))
 
+  const setAmrapRoundCap = (round: number, minutes: number) =>
+    setState((s) => ({
+      ...s,
+      amrapRoundCapMinutes: { ...s.amrapRoundCapMinutes, [round]: Math.max(1, minutes) },
+    }))
+
   // --- picker plumbing ---
   const openPickerToAdd = (round: number | null) =>
     setPicker({ open: true, targetRound: round, editingId: null })
@@ -336,6 +344,7 @@ export default function BuilderClient({
                   openPickerToAdd={openPickerToAdd}
                   openPickerToRename={openPickerToRename}
                   setRoundRepeat={setRoundRepeat}
+                  setAmrapRoundCap={setAmrapRoundCap}
                   addRound={addRound}
                   catalog={exercises}
                 />
@@ -473,6 +482,11 @@ function FormatSettings({
   }
 
   if (state.format === 'AMRAP') {
+    // Custom rounds already gives every round its own exercises, so it swaps
+    // the single overall time cap for a per-round cap authored next to each
+    // round below — "Same every round" keeps the one shared field, since
+    // that mode is explicitly meant to be identical across rounds.
+    const multiRound = state.isCustomRounds
     return (
       <div className="space-y-3">
         <Segmented
@@ -480,10 +494,22 @@ function FormatSettings({
           index={state.isCustomRounds ? 1 : 0}
           onChange={(i) => onRoundsModeChange(i === 1)}
         />
-        <SettingCard>
-          <Label>Time cap</Label>
-          <Stepper value={state.amrapCapMinutes} min={1} max={60} onChange={(v) => set('amrapCapMinutes', v)} />
-        </SettingCard>
+        {multiRound ? (
+          <SettingCard>
+            <Label>Rest between rounds</Label>
+            <ChipRow
+              values={REST_CHIP_VALUES}
+              selected={state.restBetweenRoundsSeconds}
+              label={restChipLabel}
+              onSelect={(v) => set('restBetweenRoundsSeconds', v)}
+            />
+          </SettingCard>
+        ) : (
+          <SettingCard>
+            <Label>Time cap</Label>
+            <Stepper value={state.amrapCapMinutes} min={1} max={60} onChange={(v) => set('amrapCapMinutes', v)} />
+          </SettingCard>
+        )}
       </div>
     )
   }
@@ -594,6 +620,7 @@ function UniformSection(props: ExerciseSectionProps) {
 function CustomRoundsSection(
   props: ExerciseSectionProps & {
     setRoundRepeat: (round: number, count: number) => void
+    setAmrapRoundCap: (round: number, minutes: number) => void
     addRound: () => void
   }
 ) {
@@ -604,6 +631,10 @@ function CustomRoundsSection(
   // fixed-round-count model — EMOM's minutes and AMRAP's rounds each happen
   // exactly once, so there's nothing to repeat.
   const hasRepeatCount = state.format === 'Circuit' || state.format === 'Tabata'
+  // This section only renders in Custom rounds mode (see inCustomRounds at
+  // the call site), so every AMRAP round gets its own cap here — even before
+  // a second round exists — matching the per-round exercise lists above.
+  const hasAmrapRoundCap = state.format === 'AMRAP'
   return (
     <div>
       {rounds.map((round) => (
@@ -616,6 +647,12 @@ function CustomRoundsSection(
               <RoundRepeatStepper
                 count={repeatCountFor(state, round)}
                 onChange={(v) => props.setRoundRepeat(round, v)}
+              />
+            )}
+            {hasAmrapRoundCap && (
+              <AmrapRoundCapStepper
+                minutes={amrapRoundCapMinutesFor(state, round)}
+                onChange={(v) => props.setAmrapRoundCap(round, v)}
               />
             )}
           </div>
@@ -1148,6 +1185,38 @@ function RoundRepeatStepper({
       <button
         onClick={() => onChange(count + 1)}
         aria-label="Repeat round more times"
+        className="h-5 w-5 grid place-items-center rounded-pill bg-white shadow-card text-ink-900 text-xs"
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+// Per-round AMRAP time cap ("3 x 10 min AMRAP"): each round gets its own
+// minutes value, editable inline next to the round header.
+function AmrapRoundCapStepper({
+  minutes,
+  onChange,
+}: {
+  minutes: number
+  onChange: (v: number) => void
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={() => onChange(Math.max(1, minutes - 1))}
+        aria-label="Decrease round time cap"
+        className="h-5 w-5 grid place-items-center rounded-pill bg-white shadow-card text-ink-900 text-xs"
+      >
+        −
+      </button>
+      <span className="text-[11px] font-medium text-ink-500 tabular-nums w-12 text-center">
+        {minutes} min
+      </span>
+      <button
+        onClick={() => onChange(Math.min(60, minutes + 1))}
+        aria-label="Increase round time cap"
         className="h-5 w-5 grid place-items-center rounded-pill bg-white shadow-card text-ink-900 text-xs"
       >
         +

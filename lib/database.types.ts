@@ -25,6 +25,7 @@ export type Database = {
           name: string
           tracks_calories: boolean
           tracks_distance: boolean
+          video_url: string | null
         }
         Insert: {
           body_part?: string | null
@@ -36,6 +37,7 @@ export type Database = {
           name: string
           tracks_calories?: boolean
           tracks_distance?: boolean
+          video_url?: string | null
         }
         Update: {
           body_part?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           name?: string
           tracks_calories?: boolean
           tracks_distance?: boolean
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -368,6 +371,7 @@ export type Database = {
           posted_ago: string | null
           publish_at: string | null
           rest_between_rounds_seconds: number | null
+          round_durations: number[] | null
           rounds: number
           source: string
           status: string
@@ -392,6 +396,7 @@ export type Database = {
           posted_ago?: string | null
           publish_at?: string | null
           rest_between_rounds_seconds?: number | null
+          round_durations?: number[] | null
           rounds?: number
           source: string
           status?: string
@@ -416,6 +421,7 @@ export type Database = {
           posted_ago?: string | null
           publish_at?: string | null
           rest_between_rounds_seconds?: number | null
+          round_durations?: number[] | null
           rounds?: number
           source?: string
           status?: string

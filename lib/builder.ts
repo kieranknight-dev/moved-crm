@@ -81,6 +81,13 @@ export interface BuilderState {
 
   // AMRAP / For Time
   amrapCapMinutes: number
+  // Per-round time caps for a multi-round AMRAP ("3 x 10 min AMRAP"), keyed
+  // by round number (1-based), minutes; missing = amrapCapMinutes (see
+  // amrapRoundCapMinutesFor). Only meaningful when isCustomRounds &&
+  // customRoundCount > 1 — a
+  // single-round AMRAP (custom or not) keeps using amrapCapMinutes exactly as
+  // before. See amrapHasPerRoundCaps().
+  amrapRoundCapMinutes: Record<number, number>
   forTimeCapEnabled: boolean
   forTimeCapMinutes: number
 
@@ -212,6 +219,7 @@ export function initialBuilderState(): BuilderState {
     customRoundCount: 1,
     roundRepeats: {},
     amrapCapMinutes: 12,
+    amrapRoundCapMinutes: {},
     forTimeCapEnabled: false,
     forTimeCapMinutes: 15,
     emomMinutes: 10,
@@ -281,6 +289,39 @@ export function roundCountFor(state: BuilderState): number {
   return state.isCustomRounds ? physicalRoundCount(state) : state.rounds
 }
 
+// Custom rounds mode already gives every AMRAP round its own exercises, so it
+// gets its own per-round time cap too, replacing the single overall
+// amrapCapMinutes field — even before a second round is added, since "Custom
+// rounds" (vs. "Same every round") is the mode boundary, not round count.
+// "Same every round" keeps the single shared field, since that mode is
+// explicitly meant to be identical across rounds.
+export function amrapHasPerRoundCaps(state: BuilderState): boolean {
+  return state.format === 'AMRAP' && state.isCustomRounds
+}
+
+// A round with no explicit per-round cap yet falls back to the workout's own
+// amrapCapMinutes (whatever it was set to before "+ Add round" turned this
+// into a multi-round AMRAP) — not an unrelated flat constant. Matches the
+// iOS Manual Builder's amrapMinutes(forRound:) exactly, so authoring the same
+// workout on either platform produces the same default.
+export function amrapRoundCapMinutesFor(state: BuilderState, round: number): number {
+  return Math.max(1, state.amrapRoundCapMinutes[round] ?? state.amrapCapMinutes)
+}
+
+// Physical-round-expanded per-round caps, in seconds, index-aligned with
+// round order — the same authored/repeat basis physicalRoundCount() uses, so
+// this array's length always equals `rounds` (roundCountFor's own value).
+function amrapRoundDurationsSeconds(state: BuilderState): number[] {
+  const authored = Math.max(1, maxRoundIndex(state.exercises))
+  const durations: number[] = []
+  for (let r = 1; r <= authored; r++) {
+    const repeat = repeatCountFor(state, r)
+    const secs = amrapRoundCapMinutesFor(state, r) * 60
+    for (let i = 0; i < repeat; i++) durations.push(secs)
+  }
+  return durations
+}
+
 // Unit suffix for the reps-slot value ("12", "15 cal", "500 m") — Circuit
 // never shows this (its reps entry always converts to a station duration
 // instead, so it stays plain regardless of `unit`).
@@ -321,8 +362,14 @@ export function estimatedDuration(state: BuilderState): number {
       }, 0)
       return Math.max(1, Math.floor(total / 60))
     }
-    case 'AMRAP':
-      return state.amrapCapMinutes
+    case 'AMRAP': {
+      if (!amrapHasPerRoundCaps(state)) return state.amrapCapMinutes
+      const durationsSeconds = amrapRoundDurationsSeconds(state)
+      const totalSeconds =
+        durationsSeconds.reduce((s, d) => s + d, 0) +
+        Math.max(0, durationsSeconds.length - 1) * state.restBetweenRoundsSeconds
+      return Math.max(1, Math.floor(totalSeconds / 60))
+    }
     case 'For Time': {
       if (state.forTimeCapEnabled) return state.forTimeCapMinutes
       const total = exercises.reduce((s, ex) => s + workSeconds(ex), 0)
@@ -394,6 +441,11 @@ export function liveSummaryText(state: BuilderState): string {
       return overridden ? `${base} · ${effectiveDuration(state)} min` : base
     }
     case 'AMRAP':
+      if (amrapHasPerRoundCaps(state)) {
+        return overridden
+          ? `×${roundCountFor(state)} rounds · ${effectiveDuration(state)} min`
+          : `×${roundCountFor(state)} rounds · ~${estimatedDuration(state)} min`
+      }
       return formatRowDuration(state.amrapCapMinutes * 60)
     case 'For Time':
       if (overridden) return `${effectiveDuration(state)} min`
@@ -558,13 +610,17 @@ export function buildInsert(state: BuilderState, publish: PublishIntent): Workou
     publish_at: publish.publishAt,
     exercises: exercises as unknown as WorkoutInsert['exercises'],
     rest_between_rounds_seconds:
-      state.format === 'Circuit' || state.format === 'Tabata'
+      state.format === 'Circuit' || state.format === 'Tabata' || amrapHasPerRoundCaps(state)
         ? state.restBetweenRoundsSeconds
         : null,
     for_time_cap_seconds:
       state.format === 'For Time' && state.forTimeCapEnabled
         ? state.forTimeCapMinutes * 60
         : null,
+    // Per-round AMRAP timers ("3 x 10 min AMRAP"). Null/empty = single
+    // overall timer for the whole workout (the `duration` field above), same
+    // as every AMRAP workout today — no migration needed on existing data.
+    round_durations: amrapHasPerRoundCaps(state) ? amrapRoundDurationsSeconds(state) : null,
   }
 
   return insert
@@ -626,6 +682,7 @@ type WorkoutForEdit = Pick<
   | 'exercises'
   | 'rest_between_rounds_seconds'
   | 'for_time_cap_seconds'
+  | 'round_durations'
   | 'description'
   | 'equipment'
   | 'is_new'
@@ -690,6 +747,7 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
   let exercises = rawExercises
   let customRoundCount = Math.max(1, rawExercises.reduce((m, e) => Math.max(m, e.roundIndex ?? 0), 0))
   const roundRepeats: Record<number, number> = {}
+  const amrapRoundCapMinutes: Record<number, number> = {}
 
   if (isCustomRounds) {
     const signature = (exs: BuilderExercise[]) =>
@@ -717,6 +775,22 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     })
     exercises = finalExercises
     customRoundCount = collapsed.length
+
+    // round_durations is physical-round-index-aligned (same basis as
+    // round_index expansion) — read each authored round's cap from its
+    // first physical instance, since repeats of the same round share the
+    // same cap by construction (see amrapRoundDurationsSeconds).
+    if (format === 'AMRAP' && Array.isArray(w.round_durations) && w.round_durations.length > 0) {
+      let physicalStart = 0
+      collapsed.forEach((c, i) => {
+        const roundNum = i + 1
+        const secs = w.round_durations![physicalStart]
+        if (typeof secs === 'number') {
+          amrapRoundCapMinutes[roundNum] = Math.max(1, Math.round(secs / 60))
+        }
+        physicalStart += c.repeat
+      })
+    }
   }
 
   const base: BuilderState = {
@@ -728,6 +802,7 @@ export function builderStateFromWorkout(w: WorkoutForEdit): BuilderState {
     customRoundCount,
     roundRepeats,
     amrapCapMinutes: format === 'AMRAP' ? (w.duration ?? 12) : 12,
+    amrapRoundCapMinutes,
     forTimeCapEnabled: format === 'For Time' && w.for_time_cap_seconds != null,
     forTimeCapMinutes:
       w.for_time_cap_seconds != null ? Math.round(w.for_time_cap_seconds / 60) : 15,
