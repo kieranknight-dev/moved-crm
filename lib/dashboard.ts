@@ -19,13 +19,12 @@ const WORKOUT_SOURCES: readonly WorkoutSource[] = [
   'userCreated',
 ]
 const WORKOUT_CATEGORIES: readonly WorkoutCategory[] = [
+  '20 Minute Workouts',
+  '30 Minute Workouts',
   'Strength',
+  'Gym',
+  'Pilates',
   'HIIT',
-  'Conditioning',
-  'Mobility',
-  'Full Body',
-  'Upper Body',
-  'Lower Body',
 ]
 // 'Mobility' is a real format value in the live database (one row) that
 // predates the current builder's six formats and isn't a value the builder

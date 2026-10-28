@@ -151,13 +151,12 @@ export const REST_CHIP_VALUES = [0, 30, 60, 120]
 export const FOR_TIME_CAP_CHIP_VALUES = [8, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 
 export const CATEGORIES: WorkoutCategory[] = [
+  '20 Minute Workouts',
+  '30 Minute Workouts',
   'Strength',
+  'Gym',
+  'Pilates',
   'HIIT',
-  'Conditioning',
-  'Mobility',
-  'Full Body',
-  'Upper Body',
-  'Lower Body',
 ]
 
 export const DIFFICULTIES: WorkoutDifficulty[] = [
@@ -225,7 +224,7 @@ export function initialBuilderState(): BuilderState {
     emomMinutes: 10,
     exercises: [],
     durationOverrideMinutes: null,
-    category: 'Full Body',
+    category: 'Strength',
     difficulty: 'Intermediate',
     description: '',
     equipment: '',

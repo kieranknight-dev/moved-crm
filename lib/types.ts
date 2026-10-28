@@ -88,13 +88,12 @@ export type WorkoutDifficulty = 'Beginner' | 'Intermediate' | 'Advanced'
 
 // Swift: WorkoutCategory
 export type WorkoutCategory =
+  | '20 Minute Workouts'
+  | '30 Minute Workouts'
   | 'Strength'
+  | 'Gym'
+  | 'Pilates'
   | 'HIIT'
-  | 'Conditioning'
-  | 'Mobility'
-  | 'Full Body'
-  | 'Upper Body'
-  | 'Lower Body'
 
 // Swift: WorkoutSource. The CRM writes 'coach' rows (Georgia's content);
 // the other three are user-owned values the CRM must never write.

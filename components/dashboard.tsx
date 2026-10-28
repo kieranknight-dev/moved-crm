@@ -26,13 +26,12 @@ export const FORMAT_ACCENTS: Record<DashboardWorkoutFormat, string> = {
 
 // Categories reuse the same muted accent family for visual consistency.
 export const CATEGORY_ACCENTS: Record<WorkoutCategory, string> = {
+  '20 Minute Workouts': '#7A92A5',
+  '30 Minute Workouts': '#8D7BA6',
   Strength: '#B98A4A',
+  Gym: '#B76578',
+  Pilates: '#7E9770',
   HIIT: '#C4704F',
-  Conditioning: '#7A92A5',
-  Mobility: '#7E9770',
-  'Full Body': '#8D7BA6',
-  'Upper Body': '#B76578',
-  'Lower Body': '#6FA39B',
 }
 
 export const RECIPE_CATEGORY_ACCENTS: Record<RecipeCategory, string> = {
